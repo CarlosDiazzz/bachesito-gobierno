@@ -1,6 +1,13 @@
 import { Bell, ChevronDown } from 'lucide-react'
+import { useAuth } from '../context/AuthContext'
+
+function getInitials(name = '') {
+  return name.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase() || 'U'
+}
 
 export default function TopBar({ title }) {
+  const { user } = useAuth()
+
   return (
     <div style={{
       height: '60px',
@@ -19,35 +26,24 @@ export default function TopBar({ title }) {
         <div style={{ position: 'relative' }}>
           <Bell size={20} style={{ color: 'var(--text-secondary)', cursor: 'pointer' }} />
           <span style={{
-            position: 'absolute',
-            top: '-4px',
-            right: '-4px',
-            width: '14px',
-            height: '14px',
-            borderRadius: '50%',
-            background: 'var(--danger)',
-            color: 'white',
-            fontSize: '9px',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            fontWeight: 700,
+            position: 'absolute', top: '-4px', right: '-4px',
+            width: '14px', height: '14px', borderRadius: '50%',
+            background: 'var(--danger)', color: 'white',
+            fontSize: '9px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700,
           }}>3</span>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
           <div style={{
-            width: 32,
-            height: 32,
-            borderRadius: '50%',
-            background: 'var(--primary)',
-            color: 'white',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            fontSize: '13px',
-            fontWeight: 600,
-          }}>AD</div>
-          <span style={{ fontSize: '14px', fontWeight: 500 }}>Admin</span>
+            width: 32, height: 32, borderRadius: '50%',
+            background: 'var(--primary)', color: 'white',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            fontSize: '13px', fontWeight: 600,
+          }}>
+            {getInitials(user?.name)}
+          </div>
+          <span style={{ fontSize: '14px', fontWeight: 500 }}>
+            {user?.name?.slice(0, 14) || 'Admin'}
+          </span>
           <ChevronDown size={14} style={{ color: 'var(--text-muted)' }} />
         </div>
       </div>
