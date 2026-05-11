@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 
 class AuthController extends Controller
 {
@@ -20,7 +21,7 @@ class AuthController extends Controller
             return response()->json(['message' => 'Credenciales incorrectas'], 401);
         }
 
-        $user = User::with(['roles.permissions', 'municipio', 'dependencias'])->find(Auth::id());
+        $user = User::with(['municipio', 'dependencias'])->find(Auth::id());
         $user->update(['last_login_at' => now()]);
 
         $request->session()->regenerate();
@@ -33,7 +34,7 @@ class AuthController extends Controller
 
     public function me(Request $request)
     {
-        $user = User::with(['roles.permissions', 'municipio', 'dependencias'])->find($request->user()->id);
+        $user = User::with(['municipio', 'dependencias'])->find($request->user()->id);
 
         return response()->json([
             'user' => $this->formatUser($user),
@@ -51,11 +52,28 @@ class AuthController extends Controller
 
     private function formatUser(User $user): array
     {
+        // Query roles directly — user_roles has no created_at/updated_at (withTimestamps fails)
+        $roles = DB::table('user_roles')
+            ->join('roles', 'roles.id', '=', 'user_roles.role_id')
+            ->where('user_roles.user_id', $user->id)
+            ->pluck('roles.name')
+            ->toArray();
+
+        // Query permissions via role_permissions (no timestamps either)
+        $roleIds = DB::table('user_roles')
+            ->where('user_id', $user->id)
+            ->pluck('role_id')
+            ->toArray();
+
         $permissions = [];
-        foreach ($user->roles as $role) {
-            foreach ($role->permissions as $perm) {
-                $permissions[] = $perm->name;
-            }
+        if (!empty($roleIds)) {
+            $permissions = DB::table('role_permissions')
+                ->join('permissions', 'permissions.id', '=', 'role_permissions.permission_id')
+                ->whereIn('role_permissions.role_id', $roleIds)
+                ->pluck('permissions.name')
+                ->unique()
+                ->values()
+                ->toArray();
         }
 
         return [
@@ -66,8 +84,8 @@ class AuthController extends Controller
             'status'               => $user->status,
             'puntos_civicos_total' => $user->puntos_civicos_total,
             'municipio'            => $user->municipio?->nombre ?? null,
-            'roles'                => $user->roles->pluck('name')->toArray(),
-            'permissions'          => array_values(array_unique($permissions)),
+            'roles'                => $roles,
+            'permissions'          => $permissions,
             'dependencias'         => $user->dependencias->pluck('nombre')->toArray(),
         ];
     }
