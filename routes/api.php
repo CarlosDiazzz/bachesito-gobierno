@@ -2,15 +2,51 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\Api\DashboardController;
+use App\Http\Controllers\Api\ReporteController;
+use App\Http\Controllers\Api\PresupuestoController;
+use App\Http\Controllers\Api\ReparadorController;
+use App\Http\Controllers\Api\MexicoController;
+use App\Http\Controllers\Api\AiController;
 
+// Auth — public
 Route::post('/auth/login', [AuthController::class, 'login']);
+
+// Auth + all resources — authenticated
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/auth/logout', [AuthController::class, 'logout']);
-    Route::get('/auth/me', [AuthController::class, 'me']);
+    Route::get('/auth/me',     [AuthController::class, 'me']);
+
+    // Dashboard
+    Route::get('/dashboard/stats',    [DashboardController::class, 'stats']);
+    Route::get('/dashboard/criticos', [DashboardController::class, 'criticos']);
+    Route::get('/dashboard/recientes',[DashboardController::class, 'recientes']);
+
+    // AI pre-análisis (antes de crear reporte)
+    Route::post('/ai/preanalizar', [AiController::class, 'preanalizar']);
+
+    // Reportes
+    Route::get('/reportes/mapa',                [ReporteController::class, 'mapa']);
+    Route::get('/reportes',                     [ReporteController::class, 'index']);
+    Route::post('/reportes',                    [ReporteController::class, 'store']);
+    Route::get('/reportes/{reporte}',           [ReporteController::class, 'show']);
+    Route::patch('/reportes/{reporte}/estado',  [ReporteController::class, 'updateEstado']);
+    Route::post('/reportes/{reporte}/asignar',  [ReporteController::class, 'asignar']);
+
+    // Presupuestos
+    Route::get('/presupuestos',                    [PresupuestoController::class, 'index']);
+    Route::post('/presupuestos',                   [PresupuestoController::class, 'store']);
+    Route::patch('/presupuestos/{presupuesto}',    [PresupuestoController::class, 'update']);
+    Route::delete('/presupuestos/{presupuesto}',   [PresupuestoController::class, 'destroy']);
+
+    // Reparadores
+    Route::get('/reparadores',             [ReparadorController::class, 'index']);
+    Route::get('/reparadores/asignaciones',[ReparadorController::class, 'asignaciones']);
 });
 
-Route::get('/ping', fn() => response()->json(['status' => 'ok', 'proyecto' => 'BachesITO', 'version' => '1.0.0']));
-Route::get('/estados', [App\Http\Controllers\Api\MexicoController::class, 'estados']);
-Route::get('/municipios', [App\Http\Controllers\Api\MexicoController::class, 'municipios']);
-Route::get('/municipios/{id}/colonias', [App\Http\Controllers\Api\MexicoController::class, 'colonias']);
-Route::get('/colonias/buscar', [App\Http\Controllers\Api\MexicoController::class, 'buscarPorCp']);
+// Catálogos — public
+Route::get('/ping',                          fn () => response()->json(['status' => 'ok', 'proyecto' => 'BachesITO', 'version' => '1.0.0']));
+Route::get('/estados',                       [MexicoController::class, 'estados']);
+Route::get('/municipios',                    [MexicoController::class, 'municipios']);
+Route::get('/municipios/{id}/colonias',      [MexicoController::class, 'colonias']);
+Route::get('/colonias/buscar',               [MexicoController::class, 'buscarPorCp']);
