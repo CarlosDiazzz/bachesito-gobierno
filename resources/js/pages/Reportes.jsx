@@ -1,0 +1,143 @@
+import { useState } from 'react'
+import { Search, Download } from 'lucide-react'
+import Sidebar from '../components/Sidebar'
+import TopBar from '../components/TopBar'
+import Badge from '../components/Badge'
+import { mockReportes, PRIORIDAD_COLOR, ESTADO_COLOR, ESTADO_LABEL } from '../data/mockData'
+
+const PRIO_LABEL = { critica: 'Crítica', alta: 'Alta', media: 'Media', baja: 'Baja' }
+const PRIO_BG    = { critica: '#FEE8EB', alta: '#FEF3E8', media: '#FEFAE8', baja: '#EDF7E8' }
+
+function formatFecha(dateStr) {
+  return new Date(dateStr).toLocaleDateString('es-MX', { day: '2-digit', month: 'short', year: 'numeric' })
+}
+
+export default function Reportes() {
+  const [search, setSearch]     = useState('')
+  const [priFilter, setPri]     = useState('')
+  const [estFilter, setEst]     = useState('')
+  const [selected, setSelected] = useState(new Set())
+
+  const filtered = mockReportes.filter(r => {
+    const q = search.toLowerCase()
+    const matchQ = !q || r.folio.toLowerCase().includes(q) || r.nombre_via.toLowerCase().includes(q) || r.colonia.toLowerCase().includes(q)
+    const matchP = !priFilter || r.prioridad === priFilter
+    const matchE = !estFilter || r.estado === estFilter
+    return matchQ && matchP && matchE
+  })
+
+  function toggleRow(id) {
+    setSelected(prev => { const s = new Set(prev); s.has(id) ? s.delete(id) : s.add(id); return s })
+  }
+  function toggleAll() {
+    setSelected(prev => prev.size === filtered.length ? new Set() : new Set(filtered.map(r => r.id)))
+  }
+
+  const counts = {
+    pendientes:  mockReportes.filter(r => r.estado === 'pendiente').length,
+    en_proceso:  mockReportes.filter(r => r.estado === 'en_proceso').length,
+    resueltos:   mockReportes.filter(r => r.estado === 'resuelto').length,
+    rechazados:  mockReportes.filter(r => r.estado === 'rechazado').length,
+  }
+
+  return (
+    <div style={{ display: 'flex', minHeight: '100vh', background: 'var(--bg)' }}>
+      <Sidebar />
+      <div style={{ marginLeft: '240px', flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0 }}>
+        <TopBar title="Gestión de Reportes" />
+        <div style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
+
+          {/* Controls */}
+          <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', alignItems: 'center' }}>
+            <div style={{ position: 'relative', flex: 1, minWidth: '220px' }}>
+              <Search size={16} style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
+              <input
+                value={search}
+                onChange={e => setSearch(e.target.value)}
+                placeholder="Buscar por folio, vía o colonia..."
+                style={{ width: '100%', padding: '8px 12px 8px 32px', borderRadius: '6px', border: '1px solid var(--border)', fontSize: '13px', background: 'var(--surface)', color: 'var(--text-primary)', outline: 'none' }}
+              />
+            </div>
+            <select value={priFilter} onChange={e => setPri(e.target.value)} style={{ padding: '8px 12px', borderRadius: '6px', border: '1px solid var(--border)', fontSize: '13px', background: 'var(--surface)', color: 'var(--text-primary)', cursor: 'pointer' }}>
+              <option value="">Prioridad: Todas</option>
+              <option value="critica">Crítica</option>
+              <option value="alta">Alta</option>
+              <option value="media">Media</option>
+              <option value="baja">Baja</option>
+            </select>
+            <select value={estFilter} onChange={e => setEst(e.target.value)} style={{ padding: '8px 12px', borderRadius: '6px', border: '1px solid var(--border)', fontSize: '13px', background: 'var(--surface)', color: 'var(--text-primary)', cursor: 'pointer' }}>
+              <option value="">Estado: Todos</option>
+              {Object.entries(ESTADO_LABEL).map(([k,v]) => <option key={k} value={k}>{v}</option>)}
+            </select>
+            <button style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '8px 16px', borderRadius: '6px', background: 'var(--oax-verde)', color: 'white', border: 'none', cursor: 'pointer', fontSize: '13px', fontWeight: 500 }}>
+              <Download size={15} /> Exportar
+            </button>
+          </div>
+
+          {/* Mini stats */}
+          <div style={{ display: 'flex', gap: '12px' }}>
+            {[
+              { label: 'Pendientes',  count: counts.pendientes,  color: 'var(--estado-pendiente)' },
+              { label: 'En Proceso',  count: counts.en_proceso,  color: 'var(--estado-en-proceso)' },
+              { label: 'Resueltos',   count: counts.resueltos,   color: 'var(--estado-resuelto)' },
+              { label: 'Rechazados',  count: counts.rechazados,  color: 'var(--estado-rechazado)' },
+            ].map(({ label, count, color }) => (
+              <div key={label} style={{ flex: 1, background: 'var(--surface)', borderRadius: 'var(--radius-md)', padding: '12px 16px', boxShadow: 'var(--shadow-sm)', borderTop: `3px solid ${color}` }}>
+                <div style={{ fontSize: '22px', fontWeight: 700, color }}>{count}</div>
+                <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>{label}</div>
+              </div>
+            ))}
+          </div>
+
+          {/* Table */}
+          <div style={{ background: 'var(--surface)', borderRadius: 'var(--radius-md)', boxShadow: 'var(--shadow-sm)', overflow: 'hidden' }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px' }}>
+              <thead style={{ background: 'var(--surface-2)' }}>
+                <tr style={{ color: 'var(--text-muted)', fontSize: '11px', textTransform: 'uppercase' }}>
+                  <th style={{ padding: '10px 12px', width: '32px' }}>
+                    <input type="checkbox" onChange={toggleAll} checked={selected.size === filtered.length && filtered.length > 0} />
+                  </th>
+                  {['Folio','Vía','Colonia','Prioridad','Estado','Score','Fecha','Acciones'].map(h => (
+                    <th key={h} style={{ textAlign: 'left', padding: '10px 12px', fontWeight: 500 }}>{h}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {filtered.map(r => (
+                  <tr
+                    key={r.id}
+                    style={{ borderBottom: '1px solid var(--border)', background: selected.has(r.id) ? 'var(--primary-light)' : 'transparent', transition: 'background 0.1s' }}
+                    onMouseEnter={e => { if (!selected.has(r.id)) e.currentTarget.style.background = 'var(--surface-2)' }}
+                    onMouseLeave={e => { e.currentTarget.style.background = selected.has(r.id) ? 'var(--primary-light)' : 'transparent' }}
+                  >
+                    <td style={{ padding: '10px 12px' }}>
+                      <input type="checkbox" checked={selected.has(r.id)} onChange={() => toggleRow(r.id)} />
+                    </td>
+                    <td style={{ padding: '10px 12px', fontFamily: 'monospace', fontSize: '11px', color: 'var(--text-muted)' }}>{r.folio}</td>
+                    <td style={{ padding: '10px 12px', fontWeight: 500 }}>{r.nombre_via}</td>
+                    <td style={{ padding: '10px 12px', color: 'var(--text-secondary)' }}>{r.colonia}</td>
+                    <td style={{ padding: '10px 12px' }}>
+                      <Badge label={PRIO_LABEL[r.prioridad]} color={PRIORIDAD_COLOR[r.prioridad]} bgColor={PRIO_BG[r.prioridad]} />
+                    </td>
+                    <td style={{ padding: '10px 12px' }}>
+                      <Badge label={ESTADO_LABEL[r.estado]} color={ESTADO_COLOR[r.estado]} bgColor={`${ESTADO_COLOR[r.estado]}22`} />
+                    </td>
+                    <td style={{ padding: '10px 12px', fontWeight: 700 }}>{r.score_prioridad}</td>
+                    <td style={{ padding: '10px 12px', color: 'var(--text-muted)', fontSize: '12px' }}>{formatFecha(r.fecha_reporte)}</td>
+                    <td style={{ padding: '10px 12px' }}>
+                      <button style={{ fontSize: '12px', padding: '4px 12px', borderRadius: '6px', border: '1px solid var(--primary)', color: 'var(--primary)', background: 'transparent', cursor: 'pointer' }}>Ver</button>
+                    </td>
+                  </tr>
+                ))}
+                {filtered.length === 0 && (
+                  <tr><td colSpan={9} style={{ padding: '32px', textAlign: 'center', color: 'var(--text-muted)' }}>Sin resultados</td></tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  )
+}
