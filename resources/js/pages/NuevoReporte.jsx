@@ -90,6 +90,7 @@ export default function NuevoReporte() {
   const [fotoPreview,setFotoPreview] = useState(null)
   const [aiResult,   setAiResult]   = useState(null)
   const [aiLoading,  setAiLoading]  = useState(false)
+  const [aiError,    setAiError]    = useState(null)
   const [coords,     setCoords]     = useState(null)
   const [form,       setForm]       = useState({ nombre_via: '', tipo_via: 'avenida_principal', descripcion: '', municipio_id: 20067 })
   const [saving,     setSaving]     = useState(false)
@@ -103,6 +104,7 @@ export default function NuevoReporte() {
     setFoto(file)
     setFotoPreview(URL.createObjectURL(file))
     setAiResult(null)
+    setAiError(null)
     setAiLoading(true)
 
     const fd = new FormData()
@@ -115,10 +117,14 @@ export default function NuevoReporte() {
         headers: { 'Accept': 'application/json', 'X-XSRF-TOKEN': getXsrf() },
         body: fd,
       })
-      const data = await res.json()
+      const data = await res.json().catch(() => ({}))
+      if (!res.ok) {
+        throw new Error(data.message ?? 'No fue posible analizar la imagen con IA')
+      }
       setAiResult(data)
     } catch (e) {
       setAiResult(null)
+      setAiError(e.message ?? 'No fue posible analizar la imagen con IA')
     } finally {
       setAiLoading(false)
     }
@@ -206,6 +212,11 @@ export default function NuevoReporte() {
                     ? <p style={{ color: 'var(--text-muted)', fontSize: '13px' }}>Sube una foto para activar el análisis automático.</p>
                     : <AiResultCard resultado={aiResult} loading={aiLoading} />
                   }
+                  {aiError && (
+                    <div style={{ marginTop: '10px', padding: '10px 14px', background: 'var(--danger-light)', border: '1px solid rgba(244,76,99,0.3)', borderRadius: 'var(--radius-md)', color: 'var(--danger)', fontSize: '13px', display: 'flex', gap: '8px', alignItems: 'center' }}>
+                      <AlertTriangle size={16} style={{ flexShrink: 0 }} /> {aiError}
+                    </div>
+                  )}
                 </div>
               </div>
 

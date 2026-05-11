@@ -5,7 +5,6 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\AnalizarFotoRequest;
 use App\Services\AiService;
-use Illuminate\Support\Facades\Storage;
 
 class AiController extends Controller
 {
@@ -20,7 +19,19 @@ class AiController extends Controller
         $base64    = base64_encode(file_get_contents($file->getRealPath()));
         $mimeType  = $file->getMimeType();
 
-        $resultado = $this->aiService->analizarImagen($base64, $mimeType);
+        try {
+            $resultado = $this->aiService->analizarImagen($base64, $mimeType);
+        } catch (\Throwable $e) {
+            report($e);
+
+            $isClientError = $e instanceof \InvalidArgumentException;
+
+            return response()->json([
+                'message'    => $isClientError ? $e->getMessage() : 'No fue posible analizar la imagen con IA.',
+                'error_code' => $isClientError ? 'ai_invalid_image' : 'ai_unavailable',
+                'detalle'    => app()->isLocal() && ! $isClientError ? $e->getMessage() : null,
+            ], $isClientError ? 422 : 502);
+        }
 
         return response()->json([
             'es_bache'                => $resultado['es_bache'],

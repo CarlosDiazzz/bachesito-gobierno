@@ -4,8 +4,10 @@ namespace App\Services;
 
 use App\Models\Reporte;
 use App\Models\ReporteAiAnalisis;
+use GuzzleHttp\Client as GuzzleClient;
 use Illuminate\Support\Facades\Log;
-use OpenAI\Laravel\Facades\OpenAI;
+use OpenAI;
+use OpenAI\Exceptions\ErrorException as OpenAIErrorException;
 
 class AiService
 {
@@ -39,7 +41,23 @@ PROMPT;
         }
 
         try {
-            $response = OpenAI::chat()->create([
+            $openAi = OpenAI::factory()
+                ->withApiKey((string) config('openai.api_key'))
+                ->withOrganization(config('openai.organization'))
+                ->withHttpClient(new GuzzleClient([
+                    'timeout' => config('openai.request_timeout', 30),
+                    'verify'  => config('openai.verify', true),
+                ]));
+
+            if (is_string(config('openai.project'))) {
+                $openAi->withProject(config('openai.project'));
+            }
+
+            if (is_string(config('openai.base_uri'))) {
+                $openAi->withBaseUri(config('openai.base_uri'));
+            }
+
+            $response = $openAi->make()->chat()->create([
                 'model'      => 'gpt-4o',
                 'max_tokens' => 300,
                 'messages'   => [
@@ -80,8 +98,28 @@ PROMPT;
                 'modelo_usado'  => 'gpt-4o',
             ]);
         } catch (\Throwable $e) {
-            Log::error('AiService error: ' . $e->getMessage());
-            return $this->mockResponse();
+            Log::error('AiService error', [
+                'message'   => $e->getMessage(),
+                'exception' => $e::class,
+            ]);
+
+            if ($e instanceof OpenAIErrorException) {
+                throw new \InvalidArgumentException($e->getMessage(), 0, $e);
+            }
+
+            if (str_contains($e->getMessage(), 'cURL error 60')) {
+                throw new \RuntimeException(
+                    'No fue posible conectar con OpenAI. Verifica certificados SSL/CA en PHP (cURL error 60).',
+                    0,
+                    $e
+                );
+            }
+
+            throw new \RuntimeException(
+                'No fue posible analizar la imagen con IA en este momento.',
+                0,
+                $e
+            );
         }
     }
 

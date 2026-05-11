@@ -46,4 +46,14 @@ return [
     */
 
     'request_timeout' => env('OPENAI_REQUEST_TIMEOUT', 30),
+
+    /*
+    |--------------------------------------------------------------------------
+    | TLS/SSL verification
+    |--------------------------------------------------------------------------
+    |
+    | bool true/false or absolute path to CA bundle (cacert.pem).
+    | Defaults to php.ini curl.cainfo when present.
+    */
+    'verify' => env('OPENAI_HTTP_VERIFY', ini_get('curl.cainfo') ?: true),
 ];
