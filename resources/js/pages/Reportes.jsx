@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
-import { Search, Download } from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
+import { Search, Download, Plus } from 'lucide-react'
 import Sidebar from '../components/Sidebar'
 import TopBar from '../components/TopBar'
 import Badge from '../components/Badge'
@@ -15,6 +16,7 @@ function formatFecha(dateStr) {
 }
 
 export default function Reportes() {
+  const navigate = useNavigate()
   const [reportes,  setReportes]  = useState([])
   const [meta,      setMeta]      = useState({ total: 0, last_page: 1, current_page: 1 })
   const [loading,   setLoading]   = useState(true)
@@ -83,6 +85,9 @@ export default function Reportes() {
               <option value="">Estado: Todos</option>
               {Object.entries(ESTADO_LABEL).map(([k,v]) => <option key={k} value={k}>{v}</option>)}
             </select>
+            <button onClick={() => navigate('/reportes/nuevo')} style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '8px 16px', borderRadius: '6px', background: 'var(--primary)', color: 'white', border: 'none', cursor: 'pointer', fontSize: '13px', fontWeight: 500 }}>
+              <Plus size={15} /> Nuevo Reporte
+            </button>
             <button style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '8px 16px', borderRadius: '6px', background: 'var(--oax-verde)', color: 'white', border: 'none', cursor: 'pointer', fontSize: '13px', fontWeight: 500 }}>
               <Download size={15} /> Exportar
             </button>
@@ -136,7 +141,7 @@ export default function Reportes() {
                       <td style={{ padding: '10px 12px', fontWeight: 700 }}>{r.score_prioridad}</td>
                       <td style={{ padding: '10px 12px', color: 'var(--text-muted)', fontSize: '12px' }}>{formatFecha(r.fecha_reporte)}</td>
                       <td style={{ padding: '10px 12px' }}>
-                        <button style={{ fontSize: '12px', padding: '4px 12px', borderRadius: '6px', border: '1px solid var(--primary)', color: 'var(--primary)', background: 'transparent', cursor: 'pointer' }}>Ver</button>
+                        <button onClick={() => navigate(`/reportes/${r.id}`)} style={{ fontSize: '12px', padding: '4px 12px', borderRadius: '6px', border: '1px solid var(--primary)', color: 'var(--primary)', background: 'transparent', cursor: 'pointer' }}>Ver</button>
                       </td>
                     </tr>
                   ))

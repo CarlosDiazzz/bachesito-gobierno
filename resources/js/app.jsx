@@ -7,14 +7,16 @@ import '../css/app.css'
 import { AuthProvider } from './context/AuthContext'
 import ProtectedRoute from './components/ProtectedRoute'
 
-import Welcome from './pages/Welcome'
-import Login from './pages/Login'
-import SinPermiso from './pages/SinPermiso'
-import Dashboard from './pages/Dashboard'
-import Mapa from './pages/Mapa'
-import Reportes from './pages/Reportes'
-import Reparadores from './pages/Reparadores'
-import Presupuestos from './pages/Presupuestos'
+import Welcome        from './pages/Welcome'
+import Login          from './pages/Login'
+import SinPermiso     from './pages/SinPermiso'
+import Dashboard      from './pages/Dashboard'
+import Mapa           from './pages/Mapa'
+import Reportes       from './pages/Reportes'
+import ReporteDetalle from './pages/ReporteDetalle'
+import NuevoReporte   from './pages/NuevoReporte'
+import Reparadores    from './pages/Reparadores'
+import Presupuestos   from './pages/Presupuestos'
 
 function App() {
   return (
@@ -23,27 +25,17 @@ function App() {
         <Routes>
           {/* Public */}
           <Route path="/bienvenido" element={<Welcome />} />
-          <Route path="/login" element={<Login />} />
+          <Route path="/login"      element={<Login />} />
           <Route path="/sin-permiso" element={<SinPermiso />} />
 
-          {/* Protected — any authenticated user */}
-          <Route path="/" element={
-            <ProtectedRoute><Dashboard /></ProtectedRoute>
-          } />
-          <Route path="/mapa" element={
-            <ProtectedRoute><Mapa /></ProtectedRoute>
-          } />
-          <Route path="/reportes" element={
-            <ProtectedRoute><Reportes /></ProtectedRoute>
-          } />
-          <Route path="/reparadores" element={
-            <ProtectedRoute><Reparadores /></ProtectedRoute>
-          } />
-
-          {/* Protected — autoridad only */}
-          <Route path="/presupuestos" element={
-            <ProtectedRoute requiredRole="autoridad"><Presupuestos /></ProtectedRoute>
-          } />
+          {/* Protected */}
+          <Route path="/" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+          <Route path="/mapa" element={<ProtectedRoute><Mapa /></ProtectedRoute>} />
+          <Route path="/reportes" element={<ProtectedRoute><Reportes /></ProtectedRoute>} />
+          <Route path="/reportes/nuevo" element={<ProtectedRoute><NuevoReporte /></ProtectedRoute>} />
+          <Route path="/reportes/:id" element={<ProtectedRoute><ReporteDetalle /></ProtectedRoute>} />
+          <Route path="/reparadores" element={<ProtectedRoute><Reparadores /></ProtectedRoute>} />
+          <Route path="/presupuestos" element={<ProtectedRoute requiredRole="autoridad"><Presupuestos /></ProtectedRoute>} />
 
           <Route path="*" element={<Navigate to="/bienvenido" replace />} />
         </Routes>

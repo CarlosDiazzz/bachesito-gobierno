@@ -7,6 +7,7 @@ use App\Http\Controllers\Api\ReporteController;
 use App\Http\Controllers\Api\PresupuestoController;
 use App\Http\Controllers\Api\ReparadorController;
 use App\Http\Controllers\Api\MexicoController;
+use App\Http\Controllers\Api\AiController;
 
 // Auth — public
 Route::post('/auth/login', [AuthController::class, 'login']);
@@ -20,6 +21,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/dashboard/stats',    [DashboardController::class, 'stats']);
     Route::get('/dashboard/criticos', [DashboardController::class, 'criticos']);
     Route::get('/dashboard/recientes',[DashboardController::class, 'recientes']);
+
+    // AI pre-análisis (antes de crear reporte)
+    Route::post('/ai/preanalizar', [AiController::class, 'preanalizar']);
 
     // Reportes
     Route::get('/reportes/mapa',                [ReporteController::class, 'mapa']);

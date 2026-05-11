@@ -14,6 +14,7 @@ class StoreReporteRequest extends FormRequest
     public function rules(): array
     {
         return [
+            'foto'                 => 'nullable|image|mimes:jpeg,png,jpg,webp|max:10240',
             'latitud'              => 'required|numeric|between:-90,90',
             'longitud'             => 'required|numeric|between:-180,180',
             'descripcion'          => 'required|string|min:10|max:1000',
