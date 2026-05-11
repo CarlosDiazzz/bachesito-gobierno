@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "PowerShell(Remove-Item *)",
+      "PowerShell(Set-Location \"C:\\\\Users\\\\carlo\\\\Documents\\\\BachesITO\\\\bachesito-gobierno\"; php artisan tinker --execute=\"App\\\\Models\\\\User::with\\('roles'\\)->get\\(\\)->each\\(function\\(\\\\$u\\){ echo \\\\$u->email.' | roles: '.implode\\(',',\\\\$u->roles->pluck\\('name'\\)->toArray\\(\\)\\).PHP_EOL; }\\);\" 2>&1)"
+    ]
+  }
+}
