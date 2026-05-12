@@ -17,8 +17,7 @@ export default function Login() {
     { label: 'Admin', email: 'admin@bachesito.gob.mx', password: 'BachesITO2026!' },
     { label: 'Supervisor', email: 'supervisor@bachesito.gob.mx', password: 'Supervisor2026!' },
     { label: 'Reparador', email: 'reparador@bachesito.gob.mx', password: 'Reparador2026!' },
-    { label: 'Ciudadano', email: 'ciudadano@bachesito.gob.mx', password: 'Ciudadano2026!' },
-  ]
+    { label: 'Ciudadano', email: 'ciudadano@bachesito.gob.mx', password: 'Ciudadano2026!' },\n  ]
 
   const handleSubmit = async (e) => {
     e.preventDefault()
@@ -26,14 +25,14 @@ export default function Login() {
     setLoading(true)
 
     try {
-      const success = await login(email, password)
-      if (success) {
+      const user = await login(email, password)
+      if (user) {
         navigate('/')
       } else {
         setError('Credenciales institucionales incorrectas.')
       }
     } catch (err) {
-      setError('Error de conexión con el servidor oficial.')
+      setError(err.message || 'Error de conexión con el servidor oficial.')
     } finally {
       setLoading(false)
     }
@@ -85,7 +84,7 @@ export default function Login() {
                 type="email"
                 value={email}
                 onChange={e => setEmail(e.target.value)}
-                placeholder="usuario@oaxacadejuarez.gob.mx"
+                placeholder="admin@bachesito.gob.mx"
                 required
                 style={{
                   width: '100%', padding: '14px 16px', borderRadius: 'var(--radius-md)',

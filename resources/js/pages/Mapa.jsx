@@ -21,6 +21,20 @@ const PRIORIDADES = ['critica', 'alta', 'media', 'baja']
 const ESTADOS     = ['pendiente', 'validado', 'asignado', 'en_proceso', 'resuelto', 'rechazado']
 const PRIO_LABEL  = { critica: 'Crítica', alta: 'Alta', media: 'Media', baja: 'Baja' }
 const PRIO_BG     = { critica: '#FEE8EB', alta: '#FEF3E8', media: '#FEFAE8', baja: '#EDF7E8' }
+const PRIO_FILTER_STYLE = {
+  critica: { color: 'var(--prio-critica)', textOn: 'white' },
+  alta: { color: 'var(--prio-alta)', textOn: 'white' },
+  media: { color: 'var(--prio-media)', textOn: '#3f3207' },
+  baja: { color: 'var(--prio-baja)', textOn: 'white' },
+}
+const ESTADO_FILTER_STYLE = {
+  pendiente:  { color: 'var(--estado-pendiente)', textOn: 'white' },
+  validado:   { color: 'var(--estado-validado)', textOn: 'white' },
+  asignado:   { color: 'var(--estado-purpura, #8E418D)', textOn: 'white' },
+  en_proceso: { color: 'var(--estado-en-proceso)', textOn: 'white' },
+  resuelto:   { color: 'var(--estado-resuelto)', textOn: 'white' },
+  rechazado:  { color: 'var(--estado-rechazado)', textOn: 'white' },
+}
 
 function MapController({ selected }) {
   const map = useMap()
@@ -64,7 +78,21 @@ export default function Mapa() {
               <div style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: '8px' }}>Filtrar por prioridad</div>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
                 {PRIORIDADES.map(p => (
-                  <button key={p} onClick={() => togglePrio(p)} style={{ fontSize: '12px', fontWeight: 500, padding: '4px 10px', borderRadius: '999px', cursor: 'pointer', border: `1.5px solid ${PRIORIDAD_COLOR[p]}`, background: activePrio.has(p) ? PRIORIDAD_COLOR[p] : 'transparent', color: activePrio.has(p) ? 'white' : PRIORIDAD_COLOR[p] }}>
+                  <button
+                    key={p}
+                    onClick={() => togglePrio(p)}
+                    style={{
+                      fontSize: '12px',
+                      fontWeight: activePrio.has(p) ? 700 : 600,
+                      padding: '4px 10px',
+                      borderRadius: '999px',
+                      cursor: 'pointer',
+                      border: `1.5px solid ${PRIO_FILTER_STYLE[p].color}`,
+                      background: activePrio.has(p) ? PRIO_FILTER_STYLE[p].color : 'var(--surface)',
+                      color: activePrio.has(p) ? PRIO_FILTER_STYLE[p].textOn : 'var(--text-primary)',
+                      boxShadow: activePrio.has(p) ? '0 1px 2px rgba(0,0,0,0.12)' : 'none',
+                    }}
+                  >
                     {PRIO_LABEL[p]}
                   </button>
                 ))}
@@ -72,7 +100,21 @@ export default function Mapa() {
               <div style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', margin: '12px 0 8px' }}>Filtrar por estado</div>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
                 {ESTADOS.map(e => (
-                  <button key={e} onClick={() => toggleEstado(e)} style={{ fontSize: '11px', fontWeight: 500, padding: '3px 8px', borderRadius: '999px', cursor: 'pointer', border: `1.5px solid ${ESTADO_COLOR[e]}`, background: activeEstado.has(e) ? ESTADO_COLOR[e] : 'transparent', color: activeEstado.has(e) ? 'white' : ESTADO_COLOR[e] }}>
+                  <button
+                    key={e}
+                    onClick={() => toggleEstado(e)}
+                    style={{
+                      fontSize: '11px',
+                      fontWeight: activeEstado.has(e) ? 700 : 600,
+                      padding: '3px 8px',
+                      borderRadius: '999px',
+                      cursor: 'pointer',
+                      border: `1.5px solid ${ESTADO_FILTER_STYLE[e].color}`,
+                      background: activeEstado.has(e) ? ESTADO_FILTER_STYLE[e].color : 'var(--surface)',
+                      color: activeEstado.has(e) ? ESTADO_FILTER_STYLE[e].textOn : 'var(--text-primary)',
+                      boxShadow: activeEstado.has(e) ? '0 1px 2px rgba(0,0,0,0.12)' : 'none',
+                    }}
+                  >
                     {ESTADO_LABEL[e]}
                   </button>
                 ))}

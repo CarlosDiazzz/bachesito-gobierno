@@ -7,6 +7,7 @@ use App\Models\HistorialEstado;
 use App\Models\Asignacion;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 
 class ReporteService
 {
@@ -44,9 +45,31 @@ class ReporteService
                  ->paginate($perPage);
     }
 
+    private function fotoUrl(?\App\Models\ReporteFoto $foto): ?string
+    {
+        if (!$foto) return null;
+
+        // Siempre reconstruir desde storage_path: devuelve URL relativa /storage/...
+        // para que funcione tanto en local como vía proxy (ngrok, etc.)
+        if ($foto->storage_path) {
+            return '/storage/' . ltrim($foto->storage_path, '/');
+        }
+
+        // Fallback: convertir URL absoluta a relativa si es del mismo dominio
+        if ($foto->url) {
+            $appUrl = rtrim(config('app.url'), '/');
+            return str_starts_with($foto->url, $appUrl)
+                ? substr($foto->url, strlen($appUrl))
+                : $foto->url;
+        }
+
+        return null;
+    }
+
     public function formato(Reporte $reporte): array
     {
-        $foto = $reporte->fotos->first()?->url
+        $fotosOrdenadas = $reporte->fotos->sortBy('orden');
+        $foto = $this->fotoUrl($fotosOrdenadas->first())
             ?? "https://placehold.co/400x300/9099B8/white?text=Sin+Foto";
 
         return [
@@ -64,6 +87,7 @@ class ReporteService
             'ciudadano'        => $reporte->ciudadano?->name ?? '—',
             'fecha_reporte'    => $reporte->fecha_reporte?->toIso8601String(),
             'foto'             => $foto,
+            'fotos'            => $fotosOrdenadas->map(fn ($f) => $this->fotoUrl($f))->filter()->values()->toArray(),
             'tipo_via'         => $reporte->tipo_via,
             'direccion_aproximada' => $reporte->direccion_aproximada,
         ];

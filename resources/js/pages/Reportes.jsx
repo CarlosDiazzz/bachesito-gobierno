@@ -88,7 +88,7 @@ export default function Reportes() {
             <button onClick={() => navigate('/reportes/nuevo')} style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '8px 16px', borderRadius: '6px', background: 'var(--primary)', color: 'white', border: 'none', cursor: 'pointer', fontSize: '13px', fontWeight: 500 }}>
               <Plus size={15} /> Nuevo Reporte
             </button>
-            <button style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '8px 16px', borderRadius: '6px', background: 'var(--oax-verde)', color: 'white', border: 'none', cursor: 'pointer', fontSize: '13px', fontWeight: 500 }}>
+            <button style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '8px 16px', borderRadius: '6px', background: 'var(--primary)', color: 'white', border: 'none', cursor: 'pointer', fontSize: '13px', fontWeight: 500 }}>
               <Download size={15} /> Exportar
             </button>
           </div>

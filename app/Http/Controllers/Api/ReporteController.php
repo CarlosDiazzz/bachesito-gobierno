@@ -100,7 +100,7 @@ class ReporteController extends Controller
         if ($request->hasFile('foto')) {
             $file = $request->file('foto');
             $path = $file->store("reportes/{$reporte->id}", 'public');
-            $url  = Storage::url($path);
+            $url  = Storage::disk('public')->url($path);
 
             ReporteFoto::create([
                 'reporte_id'   => $reporte->id,
@@ -158,7 +158,7 @@ class ReporteController extends Controller
         if ($request->hasFile('foto')) {
             $file = $request->file('foto');
             $path = $file->store("reportes/{$reporte->id}", 'public');
-            $url  = Storage::url($path);
+            $url  = Storage::disk('public')->url($path);
 
             ReporteFoto::create([
                 'reporte_id'   => $reporte->id,
@@ -316,5 +316,75 @@ class ReporteController extends Controller
             ->values();
 
         return response()->json($reportes);
+    }
+
+    public function cercanos(Request $request)
+    {
+        $request->validate([
+            'lat'   => 'required|numeric|between:-90,90',
+            'lng'   => 'required|numeric|between:-180,180',
+            'radio' => 'nullable|integer|min:10|max:500',
+        ]);
+
+        $lat   = (float) $request->lat;
+        $lng   = (float) $request->lng;
+        $radio = (int) ($request->radio ?? 80);
+
+        // Bounding box rápido en SQL, luego Haversine exacto en PHP
+        $deltaLat = $radio / 111000;
+        $deltaLng = $radio / (111000 * cos(deg2rad($lat)));
+
+        $candidatos = Reporte::whereBetween('latitud',  [$lat - $deltaLat, $lat + $deltaLat])
+            ->whereBetween('longitud', [$lng - $deltaLng, $lng + $deltaLng])
+            ->whereNotIn('estado', ['rechazado', 'cerrado'])
+            ->with(['fotos', 'municipio:id,nombre'])
+            ->limit(10)
+            ->get();
+
+        $cercanos = $candidatos
+            ->map(function ($r) use ($lat, $lng) {
+                $dLat = deg2rad((float) $r->latitud - $lat);
+                $dLng = deg2rad((float) $r->longitud - $lng);
+                $a    = sin($dLat / 2) ** 2
+                      + cos(deg2rad($lat)) * cos(deg2rad((float) $r->latitud)) * sin($dLng / 2) ** 2;
+                $r->distancia_m = (int) round(6371000 * 2 * asin(sqrt($a)));
+                return $r;
+            })
+            ->filter(fn ($r) => $r->distancia_m <= $radio)
+            ->sortBy('distancia_m')
+            ->values()
+            ->map(fn ($r) => array_merge($this->service->formato($r), ['distancia_m' => $r->distancia_m]));
+
+        return response()->json($cercanos->values());
+    }
+
+    public function agregarFotoCiudadano(Request $request, Reporte $reporte)
+    {
+        $request->validate([
+            'foto' => 'required|image|mimes:jpeg,png,jpg,webp|max:10240',
+        ]);
+
+        if (in_array($reporte->estado, ['rechazado', 'cerrado'])) {
+            return response()->json(['message' => 'No se puede agregar fotos a este reporte.'], 422);
+        }
+
+        $file   = $request->file('foto');
+        $path   = $file->store("reportes/{$reporte->id}", 'public');
+        $url    = Storage::url($path);
+        $orden  = ($reporte->fotos()->max('orden') ?? 0) + 1;
+
+        ReporteFoto::create([
+            'reporte_id'   => $reporte->id,
+            'url'          => $url,
+            'storage_path' => $path,
+            'tipo'         => 'ciudadano',
+            'es_principal' => false,
+            'orden'        => $orden,
+        ]);
+
+        return response()->json([
+            'message' => 'Foto agregada correctamente.',
+            'folio'   => $reporte->folio,
+        ], 201);
     }
 }

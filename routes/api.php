@@ -14,9 +14,11 @@ use App\Http\Controllers\Api\UbicacionController;
 // Públicas
 Route::post('/auth/login',           [AuthController::class,  'login']);
 Route::post('/ai/preanalizar',       [AiController::class,    'preanalizar']);
-Route::get('/reportes/mapa',         [ReporteController::class, 'mapa']);
-Route::post('/ai/zona',              [AiController::class,    'analizarZona']);
-Route::post('/reportes/ciudadano',   [ReporteController::class, 'storeCiudadano']);
+Route::get('/reportes/mapa',                           [ReporteController::class, 'mapa']);
+Route::get('/reportes/cercanos',                       [ReporteController::class, 'cercanos']);
+Route::post('/ai/zona',                                [AiController::class,    'analizarZona']);
+Route::post('/reportes/ciudadano',                     [ReporteController::class, 'storeCiudadano']);
+Route::post('/reportes/{reporte}/fotos/ciudadano',     [ReporteController::class, 'agregarFotoCiudadano']);
 
 // Autenticadas
 Route::middleware('auth:sanctum')->group(function () {

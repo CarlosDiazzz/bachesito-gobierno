@@ -24,8 +24,24 @@
 
   /* UI Tokens */
   --danger:         #691332;
+  --danger-light:   #f5e8ed;
   --warning:        #bc955c;
   --success:        #285C4D;
+
+  /* Prioridades */
+  --prio-critica:   #f44c63;
+  --prio-alta:      #f98927;
+  --prio-media:     #f6c541;
+  --prio-baja:      #9099b8;
+
+  /* Estados */
+  --estado-pendiente:   #f98927;
+  --estado-validado:    #0ca678;
+  --estado-asignado:    #8e418d;
+  --estado-purpura:     #8e418d;
+  --estado-en-proceso:  #3b82f6;
+  --estado-resuelto:    #59b038;
+  --estado-rechazado:   #f44c63;
   
   --radius-sm:  4px;
   --radius-md:  8px;
