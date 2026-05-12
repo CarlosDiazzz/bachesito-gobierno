@@ -9,6 +9,7 @@ use App\Http\Controllers\Api\ReparadorController;
 use App\Http\Controllers\Api\MexicoController;
 use App\Http\Controllers\Api\AiController;
 use App\Http\Controllers\Api\GaleriaController;
+use App\Http\Controllers\Api\UbicacionController;
 
 // Públicas
 Route::post('/auth/login',           [AuthController::class,  'login']);
@@ -31,8 +32,10 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/reportes',                     [ReporteController::class, 'index']);
     Route::post('/reportes',                    [ReporteController::class, 'store']);
     Route::get('/reportes/{reporte}',           [ReporteController::class, 'show']);
-    Route::patch('/reportes/{reporte}/estado',  [ReporteController::class, 'updateEstado']);
-    Route::post('/reportes/{reporte}/asignar',  [ReporteController::class, 'asignar']);
+    Route::patch('/reportes/{reporte}/estado',           [ReporteController::class, 'updateEstado']);
+    Route::post('/reportes/{reporte}/asignar',           [ReporteController::class, 'asignar']);
+    Route::post('/reportes/{reporte}/fotos',             [ReporteController::class, 'subirFoto']);
+    Route::delete('/reportes/{reporte}/fotos/{foto}',    [ReporteController::class, 'eliminarFoto']);
     Route::get('/galeria', [GaleriaController::class, 'index']);
     Route::post('/galeria', [GaleriaController::class, 'store']);
 
@@ -45,6 +48,7 @@ Route::middleware('auth:sanctum')->group(function () {
     // Reparadores
     Route::get('/reparadores',             [ReparadorController::class, 'index']);
     Route::get('/reparadores/asignaciones',[ReparadorController::class, 'asignaciones']);
+    Route::get('/ubicacion/sugerir',       [UbicacionController::class, 'sugerir']);
 });
 
 // Catálogos — public

@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { ChevronLeft, MapPin, CheckCircle, XCircle, Clock, User, AlertTriangle, Shield } from 'lucide-react'
+import { ChevronLeft, MapPin, CheckCircle, XCircle, Clock, AlertTriangle, Shield, Upload, Trash2, ZoomIn, X, Loader } from 'lucide-react'
 import { MapContainer, TileLayer, CircleMarker } from 'react-leaflet'
 import 'leaflet/dist/leaflet.css'
 import Sidebar from '../components/Sidebar'
@@ -51,6 +51,219 @@ function EstadoTimeline({ estadoActual }) {
   )
 }
 
+const TIPO_LABEL = { ciudadano: 'Ciudadano', verificacion: 'Verificación', resolucion: 'Resolución' }
+const TIPO_COLOR = { ciudadano: 'var(--primary)', verificacion: 'var(--warning)', resolucion: 'var(--success)' }
+
+const getXsrf = () =>
+  decodeURIComponent(
+    document.cookie.split(';').find(c => c.trim().startsWith('XSRF-TOKEN='))?.split('=')[1] ?? ''
+  )
+
+function Lightbox({ fotos, indice, onClose }) {
+  const [idx, setIdx] = useState(indice)
+  const foto = fotos[idx]
+  if (!foto) return null
+  return (
+    <div onClick={onClose} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.92)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <button onClick={onClose} style={{ position: 'absolute', top: 20, right: 24, background: 'none', border: 'none', color: 'white', cursor: 'pointer', fontSize: '28px' }}>
+        <X size={28} />
+      </button>
+      {fotos.length > 1 && (
+        <>
+          <button onClick={e => { e.stopPropagation(); setIdx(i => (i - 1 + fotos.length) % fotos.length) }}
+            style={{ position: 'absolute', left: 20, background: 'rgba(255,255,255,0.15)', border: 'none', color: 'white', cursor: 'pointer', borderRadius: '50%', width: 44, height: 44, fontSize: '20px' }}>‹</button>
+          <button onClick={e => { e.stopPropagation(); setIdx(i => (i + 1) % fotos.length) }}
+            style={{ position: 'absolute', right: 20, background: 'rgba(255,255,255,0.15)', border: 'none', color: 'white', cursor: 'pointer', borderRadius: '50%', width: 44, height: 44, fontSize: '20px' }}>›</button>
+        </>
+      )}
+      <div onClick={e => e.stopPropagation()} style={{ maxWidth: '90vw', maxHeight: '85vh', textAlign: 'center' }}>
+        <img src={foto.url} alt="" style={{ maxWidth: '100%', maxHeight: '80vh', borderRadius: '8px', objectFit: 'contain' }} />
+        <div style={{ color: 'rgba(255,255,255,0.7)', fontSize: '12px', marginTop: '10px' }}>
+          {TIPO_LABEL[foto.tipo]} · {idx + 1} / {fotos.length}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function FotoGaleria({ fotos, reporteId, onFotosChange, onAiChange }) {
+  const fileRef   = useRef()
+  const [preview,   setPreview]   = useState(null)
+  const [file,      setFile]      = useState(null)
+  const [tipo,      setTipo]      = useState('verificacion')
+  const [reAnalizar,setReAnalizar] = useState(false)
+  const [uploading, setUploading] = useState(false)
+  const [deleting,  setDeleting]  = useState(null)
+  const [lightbox,  setLightbox]  = useState(null)
+  const [uploadErr, setUploadErr] = useState(null)
+
+  const seleccionarArchivo = useCallback((f) => {
+    if (!f) return
+    setFile(f)
+    setPreview(URL.createObjectURL(f))
+    setUploadErr(null)
+  }, [])
+
+  const cancelarPreview = () => {
+    setFile(null)
+    setPreview(null)
+    if (fileRef.current) fileRef.current.value = ''
+  }
+
+  const subirFoto = async () => {
+    if (!file) return
+    setUploading(true)
+    setUploadErr(null)
+    const fd = new FormData()
+    fd.append('foto', file)
+    fd.append('tipo', tipo)
+    fd.append('re_analizar', reAnalizar ? '1' : '0')
+    try {
+      const res = await fetch(`/api/reportes/${reporteId}/fotos`, {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Accept': 'application/json', 'X-XSRF-TOKEN': getXsrf() },
+        body: fd,
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.message ?? 'Error al subir')
+      onFotosChange(prev => [...prev, data.foto])
+      if (data.ai_actualizado) onAiChange(data.ai_actualizado, data.score_prioridad, data.prioridad)
+      cancelarPreview()
+    } catch (e) {
+      setUploadErr(e.message)
+    } finally {
+      setUploading(false)
+    }
+  }
+
+  const eliminarFoto = async (foto) => {
+    if (!confirm(`¿Eliminar esta foto (${TIPO_LABEL[foto.tipo]})?`)) return
+    setDeleting(foto.id)
+    try {
+      const res = await fetch(`/api/reportes/${reporteId}/fotos/${foto.id}`, {
+        method: 'DELETE',
+        credentials: 'include',
+        headers: { 'Accept': 'application/json', 'X-XSRF-TOKEN': getXsrf() },
+      })
+      if (!res.ok) throw new Error('Error al eliminar')
+      onFotosChange(prev => prev.filter(f => f.id !== foto.id))
+    } catch (e) {
+      alert(e.message)
+    } finally {
+      setDeleting(null)
+    }
+  }
+
+  return (
+    <div style={{ background: 'var(--surface)', borderRadius: 'var(--radius-md)', boxShadow: 'var(--shadow-sm)', overflow: 'hidden' }}>
+      <style>{`
+        .foto-thumb:hover .foto-overlay { opacity: 1 !important; }
+        .upload-drop:hover { border-color: var(--primary) !important; background: var(--primary-light) !important; }
+      `}</style>
+
+      {/* Header */}
+      <div style={{ padding: '16px 20px', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <h3 style={{ fontSize: '15px', fontWeight: 600 }}>Fotos del reporte</h3>
+        <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>{fotos.length} foto{fotos.length !== 1 ? 's' : ''}</span>
+      </div>
+
+      {/* Galería grid */}
+      {fotos.length > 0 ? (
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '2px', padding: '2px' }}>
+          {fotos.map((f, i) => (
+            <div key={f.id} className="foto-thumb" style={{ position: 'relative', aspectRatio: '1', overflow: 'hidden', cursor: 'pointer' }}
+              onClick={() => setLightbox(i)}>
+              <img src={f.url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+              {/* Overlay */}
+              <div className="foto-overlay" style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.45)', opacity: 0, transition: 'opacity 0.2s', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+                <ZoomIn size={22} style={{ color: 'white' }} />
+              </div>
+              {/* Tipo badge */}
+              <div style={{ position: 'absolute', bottom: 4, left: 4, fontSize: '9px', fontWeight: 700, color: 'white', background: TIPO_COLOR[f.tipo], padding: '2px 6px', borderRadius: '3px', textTransform: 'uppercase' }}>
+                {TIPO_LABEL[f.tipo]}
+              </div>
+              {/* Principal badge */}
+              {f.es_principal && (
+                <div style={{ position: 'absolute', top: 4, left: 4, fontSize: '9px', fontWeight: 700, color: 'white', background: 'var(--primary)', padding: '2px 6px', borderRadius: '3px' }}>
+                  Principal
+                </div>
+              )}
+              {/* Delete btn */}
+              <button
+                onClick={e => { e.stopPropagation(); eliminarFoto(f) }}
+                disabled={deleting === f.id}
+                style={{ position: 'absolute', top: 4, right: 4, background: 'rgba(244,76,99,0.85)', border: 'none', borderRadius: '4px', width: 24, height: 24, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', opacity: deleting === f.id ? 0.5 : 1 }}>
+                {deleting === f.id
+                  ? <Loader size={12} style={{ color: 'white', animation: 'spin 0.8s linear infinite' }} />
+                  : <Trash2 size={12} style={{ color: 'white' }} />
+                }
+              </button>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <div style={{ padding: '32px', textAlign: 'center', color: 'var(--text-muted)', fontSize: '13px' }}>Sin fotos</div>
+      )}
+
+      {/* Upload section */}
+      <div style={{ padding: '16px', borderTop: '1px solid var(--border)' }}>
+        {preview ? (
+          /* Preview + controls */
+          <div>
+            <div style={{ position: 'relative', marginBottom: '12px' }}>
+              <img src={preview} alt="preview" style={{ width: '100%', height: '160px', objectFit: 'cover', borderRadius: 'var(--radius-md)', display: 'block' }} />
+              <button onClick={cancelarPreview} style={{ position: 'absolute', top: 6, right: 6, background: 'rgba(0,0,0,0.6)', border: 'none', borderRadius: '50%', width: 26, height: 26, color: 'white', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <X size={14} />
+              </button>
+            </div>
+            <div style={{ display: 'flex', gap: '10px', marginBottom: '10px', flexWrap: 'wrap' }}>
+              <select value={tipo} onChange={e => setTipo(e.target.value)}
+                style={{ flex: 1, padding: '8px 10px', borderRadius: 'var(--radius-md)', border: '1px solid var(--border)', fontSize: '13px', background: 'var(--bg)', cursor: 'pointer' }}>
+                <option value="verificacion">Verificación</option>
+                <option value="resolucion">Resolución</option>
+                <option value="ciudadano">Ciudadano</option>
+              </select>
+              <label style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '13px', color: 'var(--text-secondary)', cursor: 'pointer', whiteSpace: 'nowrap' }}>
+                <input type="checkbox" checked={reAnalizar} onChange={e => setReAnalizar(e.target.checked)} />
+                Re-analizar con IA
+              </label>
+            </div>
+            {uploadErr && (
+              <div style={{ padding: '8px 12px', background: 'var(--danger-light)', borderRadius: 'var(--radius-md)', color: 'var(--danger)', fontSize: '12px', marginBottom: '10px' }}>
+                {uploadErr}
+              </div>
+            )}
+            <button onClick={subirFoto} disabled={uploading}
+              style={{ width: '100%', padding: '10px', borderRadius: 'var(--radius-md)', background: uploading ? 'var(--text-muted)' : 'var(--primary)', color: 'white', border: 'none', fontWeight: 600, fontSize: '14px', cursor: uploading ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+              {uploading && <Loader size={16} style={{ animation: 'spin 0.8s linear infinite' }} />}
+              {uploading ? 'Subiendo...' : '↑ Subir foto'}
+            </button>
+          </div>
+        ) : (
+          /* Drop zone */
+          <div className="upload-drop"
+            onClick={() => fileRef.current?.click()}
+            onDragOver={e => e.preventDefault()}
+            onDrop={e => { e.preventDefault(); seleccionarArchivo(e.dataTransfer.files[0]) }}
+            style={{ border: '2px dashed var(--border)', borderRadius: 'var(--radius-md)', padding: '24px', textAlign: 'center', cursor: 'pointer', transition: 'all 0.2s' }}>
+            <Upload size={24} style={{ color: 'var(--text-muted)', marginBottom: '6px' }} />
+            <div style={{ fontSize: '13px', fontWeight: 500, color: 'var(--text-secondary)' }}>Añadir foto</div>
+            <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '2px' }}>JPG, PNG, WEBP · máx 10 MB</div>
+          </div>
+        )}
+        <input ref={fileRef} type="file" accept="image/jpeg,image/png,image/jpg,image/webp" style={{ display: 'none' }}
+          onChange={e => seleccionarArchivo(e.target.files[0])} />
+      </div>
+
+      {/* Lightbox */}
+      {lightbox !== null && (
+        <Lightbox fotos={fotos} indice={lightbox} onClose={() => setLightbox(null)} />
+      )}
+    </div>
+  )
+}
+
 export default function ReporteDetalle() {
   const { id }    = useParams()
   const navigate  = useNavigate()
@@ -60,13 +273,23 @@ export default function ReporteDetalle() {
   const [loading,  setLoading]  = useState(true)
   const [updating, setUpdating] = useState(false)
   const [error,    setError]    = useState(null)
+  const [fotos,    setFotos]    = useState([])
 
   useEffect(() => {
     api.get(`/api/reportes/${id}`)
-      .then(setReporte)
+      .then(data => { setReporte(data); setFotos(data.fotos ?? []) })
       .catch(e => setError(e.message))
       .finally(() => setLoading(false))
   }, [id])
+
+  const handleAiChange = (aiActualizado, scoreNuevo, prioridadNueva) => {
+    setReporte(prev => ({
+      ...prev,
+      ai:              aiActualizado,
+      score_prioridad: scoreNuevo,
+      prioridad:       prioridadNueva,
+    }))
+  }
 
   const cambiarEstado = async (nuevoEstado) => {
     setUpdating(true)
@@ -154,10 +377,13 @@ export default function ReporteDetalle() {
             {/* LEFT col */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
 
-              {/* Foto principal */}
-              <div style={{ background: 'var(--surface)', borderRadius: 'var(--radius-md)', boxShadow: 'var(--shadow-sm)', overflow: 'hidden' }}>
-                <img src={reporte.foto} alt="Foto del bache" style={{ width: '100%', height: '260px', objectFit: 'cover' }} />
-              </div>
+              {/* Galería de fotos + upload */}
+              <FotoGaleria
+                fotos={fotos}
+                reporteId={reporte.id}
+                onFotosChange={setFotos}
+                onAiChange={handleAiChange}
+              />
 
               {/* AI Analysis */}
               <div style={{ background: 'var(--surface)', borderRadius: 'var(--radius-md)', boxShadow: 'var(--shadow-sm)', padding: '20px' }}>

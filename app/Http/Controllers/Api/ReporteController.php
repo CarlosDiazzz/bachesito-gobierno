@@ -220,6 +220,93 @@ class ReporteController extends Controller
         ]);
     }
 
+    public function subirFoto(Request $request, Reporte $reporte)
+    {
+        $request->validate([
+            'foto'        => 'required|image|mimes:jpeg,png,jpg,webp|max:10240',
+            'tipo'        => 'nullable|in:ciudadano,verificacion,resolucion',
+            're_analizar' => 'nullable|boolean',
+        ]);
+
+        $file  = $request->file('foto');
+        $tipo  = $request->input('tipo', 'verificacion');
+
+        // Guardar en storage/app/public/reportes/{id}/
+        $nombre = now()->format('YmdHis') . '_' . uniqid() . '.' . $file->getClientOriginalExtension();
+        $path   = $file->storeAs("reportes/{$reporte->id}", $nombre, 'public');
+        $url    = Storage::url($path);
+
+        // Si ya existía foto principal dejarla; si no, esta será la principal
+        $esPrincipal = ! $reporte->fotos()->where('es_principal', true)->exists();
+        $orden       = $reporte->fotos()->max('orden') + 1;
+
+        $foto = ReporteFoto::create([
+            'reporte_id'   => $reporte->id,
+            'url'          => $url,
+            'storage_path' => $path,
+            'tipo'         => $tipo,
+            'es_principal' => $esPrincipal,
+            'orden'        => $orden,
+        ]);
+
+        $aiActualizado = null;
+
+        // Re-analizar con IA si se solicita
+        if (filter_var($request->input('re_analizar', false), FILTER_VALIDATE_BOOLEAN)) {
+            $base64    = base64_encode(file_get_contents($file->getRealPath()));
+            $resultado = $this->aiService->analizarImagen($base64, $file->getMimeType());
+            $this->aiService->guardarAnalisis($reporte, $resultado);
+            $reporte->load('aiAnalisis');
+            $this->scoreService->calcular($reporte->fresh(['aiAnalisis']));
+
+            $ai = $reporte->fresh(['aiAnalisis'])->aiAnalisis;
+            $aiActualizado = $ai ? [
+                'es_bache'                => $ai->es_bache,
+                'confianza'               => $ai->confianza,
+                'severidad_ia'            => $ai->severidad_ia,
+                'profundidad_estimada_cm' => $ai->profundidad_estimada_cm,
+                'area_estimada_m2'        => $ai->area_estimada_m2,
+                'razon'                   => $ai->razon,
+                'modelo_usado'            => $ai->modelo_usado,
+            ] : null;
+        }
+
+        return response()->json([
+            'foto' => [
+                'id'          => $foto->id,
+                'url'         => $foto->url,
+                'tipo'        => $foto->tipo,
+                'es_principal'=> $foto->es_principal,
+                'orden'       => $foto->orden,
+            ],
+            'ai_actualizado'    => $aiActualizado,
+            'score_prioridad'   => $reporte->fresh()->score_prioridad,
+            'prioridad'         => $reporte->fresh()->prioridad,
+        ], 201);
+    }
+
+    public function eliminarFoto(Reporte $reporte, ReporteFoto $foto)
+    {
+        if ($foto->reporte_id !== $reporte->id) {
+            return response()->json(['message' => 'Foto no pertenece a este reporte.'], 403);
+        }
+
+        // Eliminar archivo del disco
+        if ($foto->storage_path && Storage::disk('public')->exists($foto->storage_path)) {
+            Storage::disk('public')->delete($foto->storage_path);
+        }
+
+        $eraFotoPrincipal = $foto->es_principal;
+        $foto->delete();
+
+        // Si era la principal, asignar la siguiente disponible
+        if ($eraFotoPrincipal) {
+            $reporte->fotos()->orderBy('orden')->first()?->update(['es_principal' => true]);
+        }
+
+        return response()->json(['message' => 'Foto eliminada correctamente.']);
+    }
+
     public function mapa(Request $request)
     {
         $filters  = $request->only(['estado', 'prioridad', 'municipio_id']);
