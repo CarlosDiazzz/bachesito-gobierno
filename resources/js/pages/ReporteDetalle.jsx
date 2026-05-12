@@ -153,7 +153,7 @@ function FotoGaleria({ fotos, reporteId, onFotosChange, onAiChange }) {
 
       {/* Galería grid */}
       {fotos.length > 0 ? (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '2px', padding: '2px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: window.innerWidth <= 480 ? 'repeat(2, 1fr)' : 'repeat(3, 1fr)', gap: '2px', padding: '2px' }}>
           {fotos.map((f, i) => (
             <div key={f.id} className="foto-thumb" style={{ position: 'relative', aspectRatio: '1', overflow: 'hidden', cursor: 'pointer' }}
               onClick={() => setLightbox(i)}>
@@ -324,25 +324,29 @@ export default function ReporteDetalle() {
   ].filter(Boolean)
 
   return (
-    <div style={{ display: 'flex', minHeight: '100vh', background: 'var(--bg)' }}>
+    <div className="main-layout">
       <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
       <Sidebar />
-      <div style={{ marginLeft: '260px', flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0 }}>
+      <div className="content-wrapper">
         <TopBar title="Detalle de Reporte" />
-        <div style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
+        <div className="container-fluid">
 
           {/* Header */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-            <button onClick={() => navigate('/reportes')} style={{ display: 'flex', alignItems: 'center', gap: '4px', color: 'var(--text-secondary)', background: 'none', border: 'none', cursor: 'pointer', fontSize: '14px', padding: 0 }}>
-              <ChevronLeft size={18} /> Reportes
-            </button>
-            <div style={{ fontFamily: 'monospace', fontSize: '13px', color: 'var(--text-muted)', background: 'var(--surface-2)', padding: '4px 10px', borderRadius: '4px' }}>{reporte.folio}</div>
-            <Badge label={ESTADO_LABEL[reporte.estado]} color={ESTADO_COLOR[reporte.estado]} bgColor={`${ESTADO_COLOR[reporte.estado]}22`} />
-            <Badge label={PRIO_LABEL[reporte.prioridad]} color={prioColor} bgColor={prio_bg} />
-            <div style={{ marginLeft: 'auto', display: 'flex', gap: '8px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '16px', flexWrap: 'wrap' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+              <button onClick={() => navigate('/reportes')} style={{ display: 'flex', alignItems: 'center', gap: '4px', color: 'var(--text-secondary)', background: 'none', border: 'none', cursor: 'pointer', fontSize: '14px', padding: 0 }}>
+                <ChevronLeft size={18} /> <span className="hidden-mobile">Reportes</span>
+              </button>
+              <div style={{ fontFamily: 'monospace', fontSize: '13px', color: 'var(--text-muted)', background: 'var(--surface-2)', padding: '4px 10px', borderRadius: '4px' }}>{reporte.folio}</div>
+            </div>
+            <div style={{ display: 'flex', gap: '8px' }}>
+              <Badge label={ESTADO_LABEL[reporte.estado]} color={ESTADO_COLOR[reporte.estado]} bgColor={`${ESTADO_COLOR[reporte.estado]}22`} />
+              <Badge label={PRIO_LABEL[reporte.prioridad]} color={prioColor} bgColor={prio_bg} />
+            </div>
+            <div style={{ marginLeft: window.innerWidth <= 768 ? '0' : 'auto', display: 'flex', gap: '8px', width: window.innerWidth <= 768 ? '100%' : 'auto', overflowX: 'auto', paddingBottom: window.innerWidth <= 768 ? '8px' : '0' }}>
               {botonesAccion.map(b => (
                 <button key={b.estado} disabled={updating} onClick={() => cambiarEstado(b.estado)}
-                  style={{ padding: '8px 16px', borderRadius: '6px', border: b.outline ? `1px solid ${b.color}` : 'none', background: b.outline ? 'transparent' : b.color, color: b.outline ? b.color : 'white', fontWeight: 500, fontSize: '13px', cursor: updating ? 'not-allowed' : 'pointer', opacity: updating ? 0.6 : 1 }}>
+                  style={{ flex: window.innerWidth <= 768 ? 1 : 'none', padding: '10px 16px', borderRadius: '6px', border: b.outline ? `1px solid ${b.color}` : 'none', background: b.outline ? 'transparent' : b.color, color: b.outline ? b.color : 'white', fontWeight: 700, fontSize: '13px', cursor: updating ? 'not-allowed' : 'pointer', opacity: updating ? 0.6 : 1, whiteSpace: 'nowrap' }}>
                   {b.label}
                 </button>
               ))}
@@ -350,12 +354,14 @@ export default function ReporteDetalle() {
           </div>
 
           {/* Timeline */}
-          <div style={{ background: 'var(--surface)', borderRadius: 'var(--radius-md)', boxShadow: 'var(--shadow-sm)', padding: '20px' }}>
-            <EstadoTimeline estadoActual={reporte.estado} />
+          <div style={{ background: 'var(--surface)', borderRadius: 'var(--radius-md)', boxShadow: 'var(--shadow-sm)', padding: '20px', overflowX: 'auto' }}>
+            <div style={{ minWidth: '600px' }}>
+              <EstadoTimeline estadoActual={reporte.estado} />
+            </div>
           </div>
 
           {/* Main grid */}
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
+          <div className="grid-2">
 
             {/* LEFT col */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>

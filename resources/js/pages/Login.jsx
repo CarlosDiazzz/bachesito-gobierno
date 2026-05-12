@@ -57,7 +57,11 @@ export default function Login() {
           <img 
             src="/images/logo.png" 
             alt="Logo Institucional" 
-            style={{ width: '220px', height: '220px', objectFit: 'contain', marginBottom: '16px' }} 
+            style={{ 
+              width: window.innerWidth <= 480 ? '160px' : '220px', 
+              height: window.innerWidth <= 480 ? '160px' : '220px', 
+              objectFit: 'contain', marginBottom: '16px' 
+            }} 
           />
           <div style={{ fontSize: '12px', fontWeight: 900, color: 'var(--accent)', letterSpacing: '4px', textTransform: 'uppercase' }}>
             Atención Ciudadana
@@ -68,7 +72,13 @@ export default function Login() {
         </div>
 
         {/* Card */}
-        <div style={{ background: 'var(--surface)', borderRadius: 'var(--radius-xl)', boxShadow: 'var(--shadow-lg)', padding: '40px', border: '1px solid var(--border)' }}>
+        <div style={{ 
+          background: 'var(--surface)', 
+          borderRadius: 'var(--radius-xl)', 
+          boxShadow: 'var(--shadow-lg)', 
+          padding: window.innerWidth <= 480 ? '30px 20px' : '40px', 
+          border: '1px solid var(--border)' 
+        }}>
           <div style={{ marginBottom: '24px' }}>
             <h1 style={{ fontSize: '20px', fontWeight: 900, color: 'var(--text-primary)', textTransform: 'uppercase', letterSpacing: '1px' }}>Acceso Institucional</h1>
             <p style={{ fontSize: '13px', color: 'var(--text-muted)', marginTop: '4px' }}>Ingresa tus credenciales oficiales</p>

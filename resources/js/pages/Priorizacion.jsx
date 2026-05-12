@@ -419,29 +419,29 @@ export default function Priorizacion() {
   ]
 
   return (
-    <div style={{ display:'flex', minHeight:'100vh', background:'var(--bg)' }}>
+    <div className="main-layout">
       <Sidebar />
-      <div style={{ marginLeft:260, flex:1, display:'flex', flexDirection:'column', minHeight:'100vh' }}>
+      <div className="content-wrapper">
         <TopBar title="Priorización IA" />
 
-        <main style={{ flex:1, padding:'28px 32px', maxWidth:1100 }}>
+        <main className="container-fluid" style={{ maxWidth: 1100 }}>
 
           {/* Header */}
-          <div style={{ marginBottom:28 }}>
-            <div style={{ display:'flex', alignItems:'flex-start', justifyContent:'space-between', gap:16 }}>
+          <div style={{ marginBottom: 28 }}>
+            <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 16, flexWrap: 'wrap' }}>
               <div>
-                <h1 style={{ fontSize:24, fontWeight:900, color:'var(--text-primary)', margin:'0 0 4px', display:'flex', alignItems:'center', gap:10 }}>
+                <h1 style={{ fontSize: window.innerWidth <= 480 ? 20 : 24, fontWeight: 900, color: 'var(--text-primary)', margin: '0 0 4px', display: 'flex', alignItems: 'center', gap: 10 }}>
                   <Brain size={26} color="var(--primary)" />
-                  Centro de Análisis y Priorización
+                  <span className="hidden-mobile">Centro de Análisis y</span> Priorización
                 </h1>
-                <p style={{ fontSize:13, color:'var(--text-muted)', margin:0 }}>
+                <p style={{ fontSize: 13, color: 'var(--text-muted)', margin: 0 }}>
                   TOPSIS multicriterio · Severidad IA 30 % · Tipo vía 25 % · Días pendiente 20 % · Densidad zonal 15 % · Score IA 10 %
                 </p>
               </div>
               <button onClick={cargar} disabled={loading} style={{
-                display:'flex', alignItems:'center', gap:6, padding:'10px 18px',
-                border:'1px solid var(--border)', borderRadius:8, background:'var(--surface)',
-                cursor:'pointer', fontSize:12, fontWeight:700, color:'var(--text-secondary)',
+                display: 'flex', alignItems: 'center', gap: 6, padding: '10px 18px',
+                border: '1px solid var(--border)', borderRadius: 8, background: 'var(--surface)',
+                cursor: 'pointer', fontSize: 12, fontWeight: 700, color: 'var(--text-secondary)',
                 opacity: loading ? 0.5 : 1,
               }}>
                 <RefreshCw size={14} style={{ animation: loading ? 'spin 0.8s linear infinite' : 'none' }} />
@@ -452,37 +452,37 @@ export default function Priorizacion() {
 
           {/* KPIs */}
           {!loading && !error && (
-            <div style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:16, marginBottom:28 }}>
+            <div className="grid-4" style={{ marginBottom: 28 }}>
               {[
-                { label:'Baches activos',  val:ranking.length, icon:<AlertTriangle size={20}/>, color:'var(--primary)' },
-                { label:'Críticos TOPSIS', val:totalCriticos,  icon:<Zap size={20}/>,           color:'#C05621' },
-                { label:'Zonas en alerta', val:zonasAlerta,    icon:<MapPin size={20}/>,         color:'#B7791F' },
-                { label:'Score promedio',  val:scorePromedio,  icon:<BarChart2 size={20}/>,      color:'#2B6CB0' },
+                { label: 'Baches activos', val: ranking.length, icon: <AlertTriangle size={20} />, color: 'var(--primary)' },
+                { label: 'Críticos TOPSIS', val: totalCriticos, icon: <Zap size={20} />, color: '#C05621' },
+                { label: 'Zonas en alerta', val: zonasAlerta, icon: <MapPin size={20} />, color: '#B7791F' },
+                { label: 'Score promedio', val: scorePromedio, icon: <BarChart2 size={20} />, color: '#2B6CB0' },
               ].map(({ label, val, icon, color }) => (
-                <div key={label} style={{ background:'var(--surface)', border:'1px solid var(--border)', borderRadius:12, padding:20 }}>
-                  <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:8 }}>
-                    <span style={{ fontSize:11, fontWeight:700, color:'var(--text-muted)', textTransform:'uppercase', letterSpacing:'0.5px' }}>{label}</span>
+                <div key={label} style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 12, padding: 20 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
+                    <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>{label}</span>
                     <span style={{ color }}>{icon}</span>
                   </div>
-                  <span style={{ fontSize:30, fontWeight:900, color }}>{val}</span>
+                  <span style={{ fontSize: 30, fontWeight: 900, color }}>{val}</span>
                 </div>
               ))}
             </div>
           )}
 
           {/* Tabs */}
-          <div style={{ display:'flex', gap:4, marginBottom:20, borderBottom:'2px solid var(--border)', paddingBottom:0 }}>
+          <div style={{ display: 'flex', gap: 4, marginBottom: 20, borderBottom: '2px solid var(--border)', paddingBottom: 0, overflowX: 'auto', whiteSpace: 'nowrap' }}>
             {TABS.map(t => (
               <button key={t.id} onClick={() => setTab(t.id)} style={{
-                display:'flex', alignItems:'center', gap:6, padding:'10px 18px',
-                border:'none', background:'none', cursor:'pointer', fontSize:13, fontWeight:700,
+                display: 'flex', alignItems: 'center', gap: 6, padding: '10px 18px',
+                border: 'none', background: 'none', cursor: 'pointer', fontSize: 13, fontWeight: 700,
                 color: tab === t.id ? 'var(--primary)' : 'var(--text-muted)',
                 borderBottom: tab === t.id ? '2px solid var(--primary)' : '2px solid transparent',
-                marginBottom:'-2px', transition:'all 0.15s', textTransform:'uppercase', letterSpacing:'0.5px',
+                marginBottom: '-2px', transition: 'all 0.15s', textTransform: 'uppercase', letterSpacing: '0.5px',
               }}>
                 {t.icon} {t.label}
                 {t.id === 'ranking' && ranking.length > 0 && (
-                  <span style={{ fontSize:10, fontWeight:900, background:'var(--primary)', color:'white', padding:'1px 6px', borderRadius:99, marginLeft:2 }}>
+                  <span style={{ fontSize: 10, fontWeight: 900, background: 'var(--primary)', color: 'white', padding: '1px 6px', borderRadius: 99, marginLeft: 2 }}>
                     {ranking.length}
                   </span>
                 )}

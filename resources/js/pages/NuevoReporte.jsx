@@ -197,19 +197,19 @@ export default function NuevoReporte() {
   const inputStyle = { width: '100%', padding: '10px 14px', borderRadius: 'var(--radius-md)', border: '1px solid var(--border)', fontSize: '14px', background: 'var(--surface)', color: 'var(--text-primary)', outline: 'none' }
 
   return (
-    <div style={{ display: 'flex', minHeight: '100vh', background: 'var(--bg)' }}>
-      <style>{`@keyframes spin { to { transform: rotate(360deg); } } .upload-zone:hover { border-color: var(--primary) !important; background: var(--primary-light) !important; }`}</style>
+    <div className="main-layout">
+      <style>{`@keyframes spin { to { transform: rotate(360deg); } } .upload-zone:hover { border-color: var(--primary) !important; background: var(--primary-light) !important; } .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; } @media (max-width: 900px) { .grid-2 { grid-template-columns: 1fr; } } .hidden-mobile { @media (max-width: 480px) { display: none; } }`}</style>
       <Sidebar />
-      <div style={{ marginLeft: '260px', flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0 }}>
+      <div className="content-wrapper">
         <TopBar title="Nuevo Reporte" />
-        <div style={{ padding: '24px', maxWidth: '960px' }}>
+        <div className="container-fluid">
 
-          <button onClick={() => navigate('/reportes')} style={{ display: 'flex', alignItems: 'center', gap: '6px', color: 'var(--text-secondary)', background: 'none', border: 'none', cursor: 'pointer', fontSize: '14px', marginBottom: '20px', padding: 0 }}>
+          <button onClick={() => navigate('/reportes')} style={{ display: 'flex', alignItems: 'center', gap: '6px', color: 'var(--text-secondary)', background: 'none', border: 'none', cursor: 'pointer', fontSize: '14px', marginBottom: '8px', padding: 0 }}>
             <ChevronLeft size={18} /> Volver a reportes
           </button>
 
           <form onSubmit={handleSubmit}>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px' }}>
+            <div className="grid-2">
 
               {/* LEFT — Foto + AI */}
               <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
@@ -242,7 +242,7 @@ export default function NuevoReporte() {
                 <div style={{ background: 'var(--surface)', borderRadius: 'var(--radius-md)', boxShadow: 'var(--shadow-sm)', padding: '20px' }}>
                   <h3 style={{ fontSize: '15px', fontWeight: 900, marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '8px', textTransform: 'uppercase', letterSpacing: '1px' }}>
                     <Shield size={18} style={{ color: 'var(--accent)' }} /> ANÁLISIS IA
-                    <span style={{ fontSize: '10px', fontWeight: 700, color: 'var(--text-muted)', marginLeft: 'auto', background: 'var(--bg)', padding: '2px 8px', borderRadius: '4px' }}>GPT-4o VISION</span>
+                    <span className="hidden-mobile" style={{ fontSize: '10px', fontWeight: 700, color: 'var(--text-muted)', marginLeft: 'auto', background: 'var(--bg)', padding: '2px 8px', borderRadius: '4px' }}>GPT-4o VISION</span>
                   </h3>
                   {!foto && !aiLoading
                     ? <p style={{ color: 'var(--text-muted)', fontSize: '13px' }}>Sube una foto para activar el análisis automático.</p>
@@ -264,80 +264,60 @@ export default function NuevoReporte() {
                     Ubicación
                     {coords && <span style={{ fontSize: '12px', fontWeight: 400, color: 'var(--success)', marginLeft: 'auto' }}>✓ Marcada</span>}
                   </h3>
-                  <div style={{ height: '220px', borderRadius: 'var(--radius-md)', overflow: 'hidden' }}>
+                  <div style={{ height: window.innerWidth <= 768 ? '250px' : '220px', borderRadius: 'var(--radius-md)', overflow: 'hidden' }}>
                     <MapContainer center={[17.0732, -96.7266]} zoom={14} style={{ width: '100%', height: '100%' }}>
                       <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" attribution='&copy; OpenStreetMap' />
                       <LocationPicker value={coords} onChange={autocompletarUbicacion} />
                     </MapContainer>
                   </div>
-                  {!coords && <p style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '6px' }}>Haz clic en el mapa para marcar el bache</p>}
-                  {coords && <p style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '6px' }}>{coords[0].toFixed(6)}, {coords[1].toFixed(6)}</p>}
-                  {ubicacionLoading && <p style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '6px' }}>Analizando ubicación…</p>}
-                  {ubicacionError && <p style={{ fontSize: '12px', color: 'var(--danger)', marginTop: '6px' }}>{ubicacionError}</p>}
-                  {ubicacionIA?.direccion_aproximada && (
-                    <p style={{ fontSize: '12px', color: 'var(--text-secondary)', marginTop: '6px' }}>
-                      <strong>Dirección detectada:</strong> {ubicacionIA.direccion_aproximada}
-                    </p>
-                  )}
+                  {!coords && <p style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '8px' }}>Haz clic en el mapa para marcar el bache</p>}
+                  {coords && <p style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '8px', fontFamily: 'monospace' }}>{coords[0].toFixed(6)}, {coords[1].toFixed(6)}</p>}
+                  {ubicacionLoading && <p style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '8px' }}>Analizando ubicación…</p>}
+                  {ubicacionError && <p style={{ fontSize: '12px', color: 'var(--danger)', marginTop: '8px' }}>{ubicacionError}</p>}
                 </div>
 
                 <div style={{ background: 'var(--surface)', borderRadius: 'var(--radius-md)', boxShadow: 'var(--shadow-sm)', padding: '20px', display: 'flex', flexDirection: 'column', gap: '14px' }}>
                   <h3 style={{ fontSize: '15px', fontWeight: 600 }}>Datos del reporte</h3>
 
-                  <div>
-                    <label style={{ display: 'block', fontSize: '13px', fontWeight: 500, color: 'var(--text-secondary)', marginBottom: '6px' }}>Municipio *</label>
-                    <select
-                      value={form.municipio_id}
-                      onChange={e => setForm(f => ({ ...f, municipio_id: e.target.value }))}
-                      required
-                      style={inputStyle}
-                    >
-                      <option value="">Selecciona un municipio</option>
-                      {municipios.map(m => (
-                        <option key={m.id} value={m.id}>{m.nombre}</option>
-                      ))}
-                    </select>
+                  <div style={{ display: 'grid', gridTemplateColumns: window.innerWidth <= 600 ? '1fr' : '1fr 1fr', gap: '14px' }}>
+                    <div>
+                      <label style={{ display: 'block', fontSize: '12px', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: '6px' }}>Municipio *</label>
+                      <select
+                        value={form.municipio_id}
+                        onChange={e => setForm(f => ({ ...f, municipio_id: e.target.value }))}
+                        required
+                        style={inputStyle}
+                      >
+                        <option value="">Selecciona</option>
+                        {municipios.map(m => (
+                          <option key={m.id} value={m.id}>{m.nombre}</option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div>
+                      <label style={{ display: 'block', fontSize: '12px', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: '6px' }}>Tipo de vía *</label>
+                      <select value={form.tipo_via} onChange={e => setForm(f => ({...f, tipo_via: e.target.value}))} required style={inputStyle}>
+                        <option value="avenida_principal">Avenida principal</option>
+                        <option value="calle_secundaria">Calle secundaria</option>
+                        <option value="boulevard">Boulevard</option>
+                        <option value="carretera">Carretera</option>
+                        <option value="callejon">Callejón</option>
+                        <option value="privada">Privada</option>
+                      </select>
+                    </div>
                   </div>
 
                   <div>
-                    <label style={{ display: 'block', fontSize: '13px', fontWeight: 500, color: 'var(--text-secondary)', marginBottom: '6px' }}>Nombre de la vía *</label>
+                    <label style={{ display: 'block', fontSize: '12px', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: '6px' }}>Nombre de la vía *</label>
                     <input value={form.nombre_via} onChange={e => setForm(f => ({...f, nombre_via: e.target.value}))} placeholder="Ej: Avenida Independencia" required style={inputStyle} />
                   </div>
 
                   <div>
-                    <label style={{ display: 'block', fontSize: '13px', fontWeight: 500, color: 'var(--text-secondary)', marginBottom: '6px' }}>Tipo de vía *</label>
-                    <select value={form.tipo_via} onChange={e => setForm(f => ({...f, tipo_via: e.target.value}))} required style={inputStyle}>
-                      <option value="avenida_principal">Avenida principal</option>
-                      <option value="calle_secundaria">Calle secundaria</option>
-                      <option value="boulevard">Boulevard</option>
-                      <option value="carretera">Carretera</option>
-                      <option value="callejon">Callejón</option>
-                      <option value="privada">Privada</option>
-                    </select>
-                  </div>
-
-                  <div>
-                    <label style={{ display: 'block', fontSize: '13px', fontWeight: 500, color: 'var(--text-secondary)', marginBottom: '6px' }}>Descripción *</label>
-                    <textarea value={form.descripcion} onChange={e => setForm(f => ({...f, descripcion: e.target.value}))} placeholder="Describe el tamaño, profundidad y situación del bache..." required rows={3}
+                    <label style={{ display: 'block', fontSize: '12px', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: '6px' }}>Descripción *</label>
+                    <textarea value={form.descripcion} onChange={e => setForm(f => ({...f, descripcion: e.target.value}))} placeholder="Describe el tamaño, profundidad..." required rows={3}
                       style={{...inputStyle, resize: 'vertical', fontFamily: 'inherit'}} />
                   </div>
-
-                  <div>
-                    <label style={{ display: 'block', fontSize: '13px', fontWeight: 500, color: 'var(--text-secondary)', marginBottom: '6px' }}>Dirección aproximada</label>
-                    <input
-                      value={form.direccion_aproximada}
-                      onChange={e => setForm(f => ({ ...f, direccion_aproximada: e.target.value }))}
-                      placeholder="Referencia detectada o manual"
-                      style={inputStyle}
-                    />
-                  </div>
-
-                  {(ubicacionIA?.colonia_nombre || ubicacionIA?.calle_nombre) && (
-                    <div style={{ padding: '10px 12px', border: '1px dashed var(--border-strong)', borderRadius: 'var(--radius-md)', background: 'var(--bg)' }}>
-                      {ubicacionIA?.colonia_nombre && <div style={{ fontSize: '12px', color: 'var(--text-secondary)' }}><strong>Colonia detectada:</strong> {ubicacionIA.colonia_nombre}</div>}
-                      {ubicacionIA?.calle_nombre && <div style={{ fontSize: '12px', color: 'var(--text-secondary)', marginTop: '4px' }}><strong>Calle detectada:</strong> {ubicacionIA.calle_nombre}</div>}
-                    </div>
-                  )}
 
                   {error && (
                     <div style={{ padding: '10px 14px', background: 'var(--danger-light)', border: '1px solid rgba(244,76,99,0.3)', borderRadius: 'var(--radius-md)', color: 'var(--danger)', fontSize: '13px', display: 'flex', gap: '8px', alignItems: 'center' }}>
@@ -346,9 +326,9 @@ export default function NuevoReporte() {
                   )}
 
                   <button type="submit" disabled={saving}
-                    style={{ padding: '12px', borderRadius: 'var(--radius-md)', background: saving ? 'var(--text-muted)' : 'var(--primary)', color: 'white', border: 'none', fontWeight: 600, fontSize: '15px', cursor: saving ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+                    style={{ padding: '14px', borderRadius: 'var(--radius-md)', background: saving ? 'var(--text-muted)' : 'var(--primary)', color: 'white', border: 'none', fontWeight: 700, fontSize: '15px', cursor: saving ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', marginTop: '8px' }}>
                     {saving && <div style={{ width: 18, height: 18, borderRadius: '50%', border: '2px solid rgba(255,255,255,0.4)', borderTop: '2px solid white', animation: 'spin 0.8s linear infinite' }} />}
-                    {saving ? 'Creando reporte...' : '✓ Crear reporte'}
+                    {saving ? 'Creando reporte...' : '✓ Crear reporte institucional'}
                   </button>
                 </div>
               </div>

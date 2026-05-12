@@ -1,11 +1,13 @@
 import React, { useState } from 'react'
-import { ChevronDown, User, LogOut, Settings } from 'lucide-react'
+import { ChevronDown, User, LogOut, Settings, Menu } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
+import { useUI } from '../context/UIContext'
 import { useNavigate } from 'react-router-dom'
 
 export default function TopBar({ title }) {
   const [showMenu, setShowMenu] = useState(false)
   const { user, logout } = useAuth()
+  const { toggleSidebar } = useUI()
   const navigate = useNavigate()
 
   const handleLogout = async () => {
@@ -19,7 +21,7 @@ export default function TopBar({ title }) {
     <header style={{ 
       position: 'sticky', 
       top: 0, 
-      zIndex: 5000,
+      zIndex: 2000,
       width: '100%',
       background: '#ffffff',
       borderBottom: '4px solid var(--accent)',
@@ -31,7 +33,7 @@ export default function TopBar({ title }) {
       {/* Bottom Greca Band (Rotated) - Frame effect */}
       <div className="bg-greca" style={{ position: 'absolute', bottom: 0, left: 0, width: '100%', height: '12px', opacity: 0.8, transform: 'rotate(180deg)' }} />
 
-      <div style={{
+      <div className="topbar-content" style={{
         position: 'relative',
         zIndex: 10,
         height: '110px',
@@ -40,23 +42,41 @@ export default function TopBar({ title }) {
         justifyContent: 'space-between',
         padding: '0 40px',
       }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '24px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
+          <button 
+            className="visible-mobile"
+            onClick={toggleSidebar}
+            style={{ 
+              background: 'none', 
+              border: 'none', 
+              color: 'var(--primary)', 
+              cursor: 'pointer',
+              padding: '8px',
+              marginLeft: '-8px'
+            }}
+          >
+            <Menu size={24} />
+          </button>
+
           <img 
+            className="topbar-logo"
             src="/images/logo.png" 
             alt="Logo Institucional" 
             style={{ width: '100px', height: '100px', objectFit: 'contain' }} 
           />
-          <div style={{ height: '40px', width: '1px', background: 'var(--border)' }} />
-          <div>
-            <div style={{ fontSize: '14px', fontWeight: 900, color: 'var(--accent)', letterSpacing: '3px', textTransform: 'uppercase' }}>
-              ATENCIÓN CIUDADANA
+          <div className="topbar-title-group" style={{ display: 'flex', alignItems: 'center', gap: '24px' }}>
+            <div style={{ height: '40px', width: '1px', background: 'var(--border)' }} />
+            <div>
+              <div style={{ fontSize: '14px', fontWeight: 900, color: 'var(--accent)', letterSpacing: '3px', textTransform: 'uppercase' }}>
+                ATENCIÓN CIUDADANA
+              </div>
+              <div style={{ fontSize: '10px', fontWeight: 700, color: 'var(--text-muted)', letterSpacing: '1px', marginTop: '2px', textTransform: 'uppercase' }}>
+                OAXACA DE JUÁREZ
+              </div>
             </div>
-            <div style={{ fontSize: '10px', fontWeight: 700, color: 'var(--text-muted)', letterSpacing: '1px', marginTop: '2px', textTransform: 'uppercase' }}>
-              OAXACA DE JUÁREZ
-            </div>
+            <div style={{ height: '40px', width: '1px', background: 'var(--border)', marginLeft: '24px' }} />
           </div>
-          <div style={{ height: '40px', width: '1px', background: 'var(--border)', marginLeft: '24px' }} />
-          <h1 style={{ fontSize: '20px', fontWeight: 900, color: 'var(--primary)', letterSpacing: '1px', textTransform: 'uppercase' }}>
+          <h1 className="topbar-page-title" style={{ fontSize: '20px', fontWeight: 900, color: 'var(--primary)', letterSpacing: '1px', textTransform: 'uppercase' }}>
             {title || 'PANEL DE CONTROL INSTITUCIONAL'}
           </h1>
         </div>

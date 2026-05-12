@@ -66,14 +66,24 @@ export default function Mapa() {
   }
 
   return (
-    <div style={{ display: 'flex', minHeight: '100vh', background: 'var(--bg)' }}>
+    <div className="main-layout">
       <Sidebar />
-      <div style={{ marginLeft: '260px', flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0 }}>
+      <div className="content-wrapper">
         <TopBar title="Mapa de Baches" />
-        <div style={{ flex: 1, display: 'flex', overflow: 'hidden', height: 'calc(100vh - 60px)' }}>
+        <div style={{ flex: 1, display: 'flex', overflow: 'hidden', height: 'calc(100vh - 110px)', flexDirection: window.innerWidth <= 1024 ? 'column' : 'row' }}>
 
           {/* Left panel */}
-          <div style={{ width: '320px', flexShrink: 0, background: 'var(--surface)', borderRight: '1px solid var(--border)', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+          <div style={{ 
+            width: window.innerWidth <= 1024 ? '100%' : '320px', 
+            height: window.innerWidth <= 1024 ? '200px' : '100%',
+            flexShrink: 0, 
+            background: 'var(--surface)', 
+            borderRight: window.innerWidth <= 1024 ? 'none' : '1px solid var(--border)', 
+            borderBottom: window.innerWidth <= 1024 ? '1px solid var(--border)' : 'none',
+            display: 'flex', 
+            flexDirection: 'column', 
+            overflow: 'hidden' 
+          }}>
             <div style={{ padding: '16px', borderBottom: '1px solid var(--border)' }}>
               <div style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: '8px' }}>Filtrar por prioridad</div>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
@@ -153,9 +163,28 @@ export default function Mapa() {
 
             {/* Detail panel */}
             {selected && (
-              <div style={{ position: 'absolute', top: 0, right: 0, width: '300px', height: '100%', background: 'var(--surface)', boxShadow: 'var(--shadow-lg)', zIndex: 500, display: 'flex', flexDirection: 'column', overflowY: 'auto' }}>
+              <div style={{ 
+                position: 'absolute', 
+                top: window.innerWidth <= 768 ? 'auto' : 0, 
+                bottom: 0,
+                right: 0, 
+                width: window.innerWidth <= 768 ? '100%' : '320px', 
+                height: window.innerWidth <= 768 ? '50%' : '100%', 
+                background: 'white', 
+                boxShadow: 'var(--shadow-lg)', 
+                zIndex: 500, 
+                display: 'flex', 
+                flexDirection: 'column', 
+                overflowY: 'auto',
+                borderTop: window.innerWidth <= 768 ? '4px solid var(--accent)' : 'none',
+                animation: window.innerWidth <= 768 ? 'slideUp 0.3s ease-out' : 'slideLeft 0.3s ease-out'
+              }}>
+                <style>{`
+                  @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+                  @keyframes slideLeft { from { transform: translateX(100%); } to { transform: translateX(0); } }
+                `}</style>
                 <img src={selected.foto} alt="" style={{ width: '100%', height: '160px', objectFit: 'cover' }} />
-                <div style={{ padding: '16px', flex: 1 }}>
+                <div style={{ padding: '20px', flex: 1 }}>
                   <div style={{ fontFamily: 'monospace', fontSize: '11px', color: 'var(--text-muted)', marginBottom: '4px' }}>{selected.folio}</div>
                   <div style={{ fontWeight: 700, fontSize: '16px', marginBottom: '4px' }}>{selected.nombre_via}</div>
                   <div style={{ fontSize: '13px', color: 'var(--text-secondary)', marginBottom: '12px' }}>{selected.colonia}, {selected.municipio}</div>
