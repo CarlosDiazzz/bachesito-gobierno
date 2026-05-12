@@ -17,7 +17,8 @@ export default function Login() {
     { label: 'Admin', email: 'admin@bachesito.gob.mx', password: 'BachesITO2026!' },
     { label: 'Supervisor', email: 'supervisor@bachesito.gob.mx', password: 'Supervisor2026!' },
     { label: 'Reparador', email: 'reparador@bachesito.gob.mx', password: 'Reparador2026!' },
-    { label: 'Ciudadano', email: 'ciudadano@bachesito.gob.mx', password: 'Ciudadano2026!' },\n  ]
+    { label: 'Ciudadano', email: 'ciudadano@bachesito.gob.mx', password: 'Ciudadano2026!' },
+  ]
 
   const handleSubmit = async (e) => {
     e.preventDefault()
