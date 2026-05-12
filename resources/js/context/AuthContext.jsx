@@ -1,14 +1,32 @@
+/* @refresh reset */
 import React, { createContext, useContext, useState, useEffect } from 'react'
 
 const AuthContext = createContext(null)
+const TOKEN_KEY = 'bachesito.auth.token'
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    fetch('/api/auth/me', { credentials: 'include' })
-      .then(r => r.ok ? r.json() : null)
+    const token = localStorage.getItem(TOKEN_KEY)
+    if (!token) {
+      setLoading(false)
+      return
+    }
+
+    fetch('/api/auth/me', {
+      credentials: 'include',
+      headers: {
+        'Accept': 'application/json',
+        'Authorization': `Bearer ${token}`,
+      },
+    })
+      .then(async r => {
+        if (r.ok) return r.json()
+        if (r.status === 401) localStorage.removeItem(TOKEN_KEY)
+        return null
+      })
       .then(data => { if (data?.user) setUser(data.user) })
       .catch(() => {})
       .finally(() => setLoading(false))
@@ -31,21 +49,25 @@ export function AuthProvider({ children }) {
       },
       body: JSON.stringify({ email, password }),
     })
-    const data = await res.json()
+    const data = await res.json().catch(() => ({}))
     if (!res.ok) throw new Error(data.message || 'Error al iniciar sesión')
+    if (data?.token) localStorage.setItem(TOKEN_KEY, data.token)
     setUser(data.user)
     return data.user
   }
 
   const logout = async () => {
+    const token = localStorage.getItem(TOKEN_KEY)
     await fetch('/api/auth/logout', {
       method: 'POST',
       credentials: 'include',
       headers: {
         'Accept': 'application/json',
         'X-XSRF-TOKEN': getXsrf(),
+        ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
       },
     })
+    localStorage.removeItem(TOKEN_KEY)
     setUser(null)
   }
 
