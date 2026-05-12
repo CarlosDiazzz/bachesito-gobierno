@@ -9,10 +9,14 @@ use App\Http\Controllers\Api\ReparadorController;
 use App\Http\Controllers\Api\MexicoController;
 use App\Http\Controllers\Api\AiController;
 
-// Auth — public
-Route::post('/auth/login', [AuthController::class, 'login']);
+// Públicas
+Route::post('/auth/login',           [AuthController::class,  'login']);
+Route::post('/ai/preanalizar',       [AiController::class,    'preanalizar']);
+Route::get('/reportes/mapa',         [ReporteController::class, 'mapa']);
+Route::post('/ai/zona',              [AiController::class,    'analizarZona']);
+Route::post('/reportes/ciudadano',   [ReporteController::class, 'storeCiudadano']);
 
-// Auth + all resources — authenticated
+// Autenticadas
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/auth/logout', [AuthController::class, 'logout']);
     Route::get('/auth/me',     [AuthController::class, 'me']);
@@ -22,11 +26,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/dashboard/criticos', [DashboardController::class, 'criticos']);
     Route::get('/dashboard/recientes',[DashboardController::class, 'recientes']);
 
-    // AI pre-análisis (antes de crear reporte)
-    Route::post('/ai/preanalizar', [AiController::class, 'preanalizar']);
-
     // Reportes
-    Route::get('/reportes/mapa',                [ReporteController::class, 'mapa']);
     Route::get('/reportes',                     [ReporteController::class, 'index']);
     Route::post('/reportes',                    [ReporteController::class, 'store']);
     Route::get('/reportes/{reporte}',           [ReporteController::class, 'show']);

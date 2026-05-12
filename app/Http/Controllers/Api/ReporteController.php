@@ -128,6 +128,69 @@ class ReporteController extends Controller
         return response()->json($this->service->formato($reporte), 201);
     }
 
+    public function storeCiudadano(Request $request)
+    {
+        $request->validate([
+            'foto'               => 'nullable|image|mimes:jpeg,png,jpg,webp|max:10240',
+            'latitud'            => 'required|numeric|between:-90,90',
+            'longitud'           => 'required|numeric|between:-180,180',
+            'nombre_via'         => 'nullable|string|max:255',
+            'descripcion'        => 'nullable|string|max:1000',
+            'direccion_aproximada' => 'nullable|string|max:500',
+            'municipio_id'       => 'nullable|integer|exists:municipios,id',
+            'location_source'    => 'nullable|in:exif,gps,manual',
+        ]);
+
+        $ciudadanoId = \App\Models\User::where('email', 'ciudadano@bachesito.gob.mx')->value('id') ?? 1;
+
+        $reporte = Reporte::create([
+            'ciudadano_id'        => $ciudadanoId,
+            'latitud'             => $request->latitud,
+            'longitud'            => $request->longitud,
+            'nombre_via'          => $request->nombre_via ?? 'Sin nombre',
+            'descripcion'         => $request->descripcion,
+            'direccion_aproximada'=> $request->direccion_aproximada,
+            'municipio_id'        => $request->municipio_id,
+            'tipo_via'            => 'calle_secundaria',
+            'fecha_reporte'       => now(),
+        ]);
+
+        if ($request->hasFile('foto')) {
+            $file = $request->file('foto');
+            $path = $file->store("reportes/{$reporte->id}", 'public');
+            $url  = Storage::url($path);
+
+            ReporteFoto::create([
+                'reporte_id'   => $reporte->id,
+                'url'          => $url,
+                'storage_path' => $path,
+                'tipo'         => 'ciudadano',
+                'es_principal' => true,
+                'orden'        => 0,
+            ]);
+
+            try {
+                $base64    = base64_encode(file_get_contents($file->getRealPath()));
+                $resultado = $this->aiService->analizarImagen($base64, $file->getMimeType());
+                $this->aiService->guardarAnalisis($reporte, $resultado);
+                $reporte->load('aiAnalisis');
+            } catch (\Throwable) {}
+        }
+
+        $this->scoreService->calcular($reporte->fresh(['aiAnalisis']));
+        $reporte->load(['municipio:id,nombre', 'fotos']);
+
+        return response()->json([
+            'folio'      => $reporte->folio,
+            'id'         => $reporte->id,
+            'estado'     => $reporte->estado,
+            'municipio'  => $reporte->municipio?->nombre,
+            'nombre_via' => $reporte->nombre_via,
+            'latitud'    => $reporte->latitud,
+            'longitud'   => $reporte->longitud,
+        ], 201);
+    }
+
     public function updateEstado(UpdateReporteRequest $request, Reporte $reporte)
     {
         $reporte = $this->service->actualizarEstado(
