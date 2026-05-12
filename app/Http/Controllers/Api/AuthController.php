@@ -18,12 +18,13 @@ class AuthController extends Controller
             'password' => 'required',
         ]);
 
-        if (! Auth::attempt($request->only('email', 'password'))) {
+        $user = User::with(['municipio', 'dependencias'])
+            ->where('email', $request->email)->first();
+
+        if (! $user || ! Hash::check($request->password, $user->password)) {
             return response()->json(['message' => 'Credenciales incorrectas'], 401);
         }
 
-        $request->session()->regenerate();
-        $user = User::with(['municipio', 'dependencias'])->find(Auth::id());
         $user->update(['last_login_at' => now()]);
         $user->tokens()->where('name', 'gobierno-panel')->delete();
         $token = $user->createToken('gobierno-panel')->plainTextToken;
@@ -50,13 +51,7 @@ class AuthController extends Controller
 
     public function logout(Request $request)
     {
-        if ($request->user()?->currentAccessToken()) {
-            $request->user()->currentAccessToken()->delete();
-        }
-
-        Auth::guard('web')->logout();
-        $request->session()->invalidate();
-        $request->session()->regenerateToken();
+        $request->user()?->currentAccessToken()?->delete();
 
         return response()->json(['message' => 'Sesión cerrada']);
     }
