@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom'
-import { MapPin, BarChart2, CheckCircle, LayoutDashboard, Shield } from 'lucide-react'
+import { MapPin, BarChart2, CheckCircle, Shield } from 'lucide-react'
 import Footer from '../components/Footer'
 
 const features = [
@@ -28,7 +28,7 @@ export default function Welcome() {
       {/* Main Content Split */}
       <div className="welcome-split" style={{ display: 'flex', flex: 1 }}>
         
-        {/* LEFT — Branding & Greca (Light Institutional Version) */}
+        {/* LEFT — Branding & Greca */}
         <div className="welcome-left" style={{
           flex: 1.2,
           backgroundImage: 'linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.4)), url("/images/imagen_calle.jpeg")',
@@ -44,11 +44,7 @@ export default function Welcome() {
           <div className="bg-greca" style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '24px', opacity: 0.3 }} />
           <div className="bg-greca" style={{ position: 'absolute', bottom: 0, left: 0, width: '100%', height: '24px', opacity: 0.3, transform: 'rotate(180deg)' }} />
           
-          <div className="bg-greca" style={{ position: 'absolute', top: '15%', left: '-10%', width: '120%', height: '80px', opacity: 0.1, transform: 'rotate(-15deg)' }} />
-          <div className="bg-greca" style={{ position: 'absolute', bottom: '15%', right: '-10%', width: '120%', height: '80px', opacity: 0.1, transform: 'rotate(15deg)' }} />
-
           <div style={{ maxWidth: '600px', color: 'var(--text-primary)', position: 'relative', zIndex: 2 }}>
-            {/* Logo Section - Institutional Branding with Light Background */}
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '32px', marginBottom: '40px', textAlign: 'center' }}>
               <div style={{ 
                 width: '440px', height: '440px', borderRadius: '50%', background: 'var(--surface)', 
@@ -133,7 +129,7 @@ export default function Welcome() {
                 }}
               >
                 <div style={{ width: '56px', height: '56px', borderRadius: '12px', background: 'var(--primary-light)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--primary)' }}>
-                  <LayoutDashboard size={28} />
+                  <Shield size={28} />
                 </div>
                 <div style={{ flex: 1 }}>
                   <div style={{ fontWeight: 800, fontSize: '16px', color: 'var(--primary)', textTransform: 'uppercase' }}>Personal Municipal</div>

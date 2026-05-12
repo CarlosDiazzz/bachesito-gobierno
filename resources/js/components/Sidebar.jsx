@@ -94,11 +94,12 @@ export default function Sidebar() {
             onClick={handleLogout}
             style={{
               background: 'none', border: 'none', cursor: 'pointer',
-              color: '#555', padding: '6px', borderRadius: '4px',
+              color: '#ffffff', padding: '6px', borderRadius: '4px',
               display: 'flex', alignItems: 'center', transition: 'color 0.2s',
+              opacity: 0.6
             }}
-            onMouseEnter={e => e.currentTarget.style.color = 'var(--primary)'}
-            onMouseLeave={e => e.currentTarget.style.color = '#555'}
+            onMouseEnter={e => e.currentTarget.style.opacity = '1'}
+            onMouseLeave={e => e.currentTarget.style.opacity = '0.6'}
           >
             <LogOut size={16} />
           </button>

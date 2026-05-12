@@ -1,34 +1,39 @@
-import { useState } from 'react'
-import { useNavigate, useLocation, Link } from 'react-router-dom'
-import { Eye, EyeOff, AlertCircle } from 'lucide-react'
+import React, { useState } from 'react'
+import { Link, useNavigate } from 'react-router-dom'
+import { AlertCircle, Eye, EyeOff, Shield } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 
-const quickUsers = [
-  { label: 'Admin',      email: 'admin@bachesito.gob.mx',      password: 'BachesITO2026!' },
-  { label: 'Supervisor', email: 'supervisor@bachesito.gob.mx', password: 'Supervisor2026!' },
-  { label: 'Reparador',  email: 'reparador@bachesito.gob.mx',  password: 'Reparador2026!' },
-]
-
 export default function Login() {
-  const navigate  = useNavigate()
-  const location  = useLocation()
-  const auth      = useAuth()
-
-  const [email,        setEmail]        = useState('')
-  const [password,     setPassword]     = useState('')
-  const [loading,      setLoading]      = useState(false)
-  const [error,        setError]        = useState(null)
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
+  const [error, setError] = useState('')
+  const [loading, setLoading] = useState(false)
+  
+  const { login } = useAuth()
+  const navigate = useNavigate()
+
+  const quickUsers = [
+    { label: 'Admin', email: 'admin@oaxaca.gob.mx', password: 'password' },
+    { label: 'Supervisor', email: 'supervisor@oaxaca.gob.mx', password: 'password' },
+    { label: 'Reparador', email: 'reparador@oaxaca.gob.mx', password: 'password' },
+  ]
 
   const handleSubmit = async (e) => {
     e.preventDefault()
+    setError('')
     setLoading(true)
-    setError(null)
+
     try {
-      await auth.login(email, password)
-      navigate(location.state?.from?.pathname || '/', { replace: true })
+      const success = await login(email, password)
+      if (success) {
+        navigate('/')
+      } else {
+        setError('Credenciales institucionales incorrectas.')
+      }
     } catch (err) {
-      setError(err.message)
+      setError('Error de conexión con el servidor oficial.')
+    } finally {
       setLoading(false)
     }
   }
@@ -42,7 +47,7 @@ export default function Login() {
         .submit-btn:hover:not(:disabled) { background: var(--primary-dark) !important; transform: translateY(-1px); box-shadow: var(--shadow-md); }
       `}</style>
 
-      {/* Top Greca decoration for the whole page */}
+      {/* Top Greca decoration */}
       <div className="greca-band" style={{ position: 'fixed', top: 0, opacity: 0.05, height: '120px' }} />
 
       <div style={{ width: '100%', maxWidth: '440px', padding: '20px', position: 'relative', zIndex: 2 }}>
@@ -116,12 +121,8 @@ export default function Login() {
                 />
                 <button
                   type="button"
-                  onClick={() => setShowPassword(v => !v)}
-                  style={{
-                    position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)',
-                    background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)',
-                    padding: '2px', display: 'flex',
-                  }}
+                  onClick={() => setShowPassword(!showPassword)}
+                  style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}
                 >
                   {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                 </button>
@@ -141,7 +142,6 @@ export default function Login() {
               </div>
             )}
 
-            {/* Submit */}
             <button
               className="submit-btn"
               type="submit"
@@ -158,7 +158,7 @@ export default function Login() {
               {loading && (
                 <div style={{
                   width: 18, height: 18, borderRadius: '50%',
-                  border: '2px solid rgba(255,255,255,0.4)',
+                  border: '2px solid rgba(255,255,255,0.3)',
                   borderTop: '2px solid white',
                   animation: 'spin 0.8s linear infinite',
                 }} />
@@ -206,7 +206,7 @@ export default function Login() {
       </div>
       
       {/* Bottom Greca */}
-      <div className="greca-band-gold" style={{ position: 'fixed', bottom: 0, height: '8px' }} />
+      <div className="greca-band-gold" style={{ position: 'fixed', bottom: 0, height: '8px', width: '100%' }} />
     </div>
   )
 }
