@@ -1,58 +1,93 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# 🛣️ BachesITO — Sistema de Gestión Vial Inteligente
 
 <p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
+  <img src="public/images/logo.png" width="200" alt="BachesITO Logo">
 </p>
 
-## About Laravel
+> **Transformando la infraestructura vial con identidad y tecnología.**  
+> Proyecto institucional para el Municipio de Oaxaca de Juárez diseñado para la detección, priorización y gestión eficiente de baches mediante Inteligencia Artificial.
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+---
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+## 🌟 Descripción General
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+**BachesITO** es una plataforma integral que conecta a la ciudadanía con el gobierno municipal. Permite reportar desperfectos viales en tiempo real, los cuales son analizados automáticamente por modelos de IA para determinar su gravedad y prioridad de reparación.
 
-## Learning Laravel
+Este sistema no solo optimiza los recursos públicos, sino que también refuerza la identidad institucional a través de una interfaz moderna inspirada en la herencia cultural de Oaxaca (colores guinda, oro y patrones de grecas zapotecas).
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+## 🚀 Características Principales
 
-In addition, [Laracasts](https://laracasts.com) contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+- **🤖 Análisis con IA (GPT-4o Vision):** Clasificación automática del tipo de daño, dimensiones estimadas y nivel de peligro a partir de una fotografía.
+- **📊 Score de Prioridad:** Algoritmo inteligente que asigna puntajes basados en la ubicación, tráfico de la zona y análisis técnico de la IA.
+- **🗺️ Mapa Interactivo:** Visualización geoespacial de reportes para supervisores y cuadrillas de reparación.
+- **💼 Panel Administrativo:** Gestión completa de presupuestos, asignación de cuadrillas y seguimiento de estados (Pendiente, Asignado, Resuelto).
+- **📱 Interfaz Adaptativa:** Diseño optimizado para uso en campo (móvil) y oficina (escritorio).
 
-You can also watch bite-sized lessons with real-world projects on [Laravel Learn](https://laravel.com/learn), where you will be guided through building a Laravel application from scratch while learning PHP fundamentals.
+## 🛠️ Stack Tecnológico
 
-## Agentic Development
+### Backend
+- **Laravel 11:** Framework principal de PHP.
+- **OpenAI API:** Integración de GPT-4o Vision para pre-análisis técnico.
+- **SQLite:** Base de datos ágil para el entorno de desarrollo/producción actual.
+- **Laravel Sanctum:** Autenticación robusta basada en tokens.
 
-Laravel's predictable structure and conventions make it ideal for AI coding agents like Claude Code, Cursor, and GitHub Copilot. Install [Laravel Boost](https://laravel.com/docs/ai) to supercharge your AI workflow:
+### Frontend
+- **React (Vite):** Biblioteca de UI para una experiencia SPA (Single Page Application) fluida.
+- **Tailwind CSS & Custom Design:** Estilos institucionales personalizados.
+- **Lucide React:** Iconografía moderna y minimalista.
+- **React Leaflet:** Integración de mapas basada en OpenStreetMap.
 
-```bash
-composer require laravel/boost --dev
+## 📦 Instalación y Configuración
 
-php artisan boost:install
-```
+Sigue estos pasos para poner en marcha el proyecto localmente:
 
-Boost provides your agent 15+ tools and skills that help agents build Laravel applications while following best practices.
+### Requisitos Previos
+- PHP 8.3+
+- Composer
+- Node.js & NPM
 
-## Contributing
+### Pasos
+1. **Clonar el repositorio:**
+   ```bash
+   git clone https://github.com/CarlosDiazzz/bachesito-gobierno.git
+   cd bachesito-gobierno
+   ```
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+2. **Instalar dependencias:**
+   ```bash
+   composer install
+   npm install
+   ```
 
-## Code of Conduct
+3. **Configurar el entorno:**
+   ```bash
+   cp .env.example .env
+   php artisan key:generate
+   ```
+   *Nota: Configura tu `OPENAI_API_KEY` en el archivo `.env` para habilitar el análisis por IA.*
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+4. **Base de datos:**
+   ```bash
+   touch database/database.sqlite
+   php artisan migrate --seed
+   ```
 
-## Security Vulnerabilities
+5. **Compilar y Correr:**
+   ```bash
+   npm run build
+   # En terminales separadas:
+   php artisan serve
+   npm run dev
+   ```
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+## 🏛️ Identidad Visual
 
-## License
+El proyecto utiliza los colores oficiales del Municipio de Oaxaca de Juárez:
+- **Guinda Institucional:** `#691332`
+- **Oro Oaxaqueño:** `#BC955C`
+- **Grecas Zapotecas:** Patrones geométricos inspirados en Mitla, integrados en la interfaz para resaltar la identidad local.
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+---
+
+**Desarrollado con ❤️ para el Municipio de Oaxaca de Juárez.**  
+*BachesITO v1.0 · HackaTec 2026*
