@@ -16,8 +16,13 @@ export default function Welcome() {
       <style>{`
         @media (max-width: 1024px) {
           .welcome-split { flex-direction: column !important; }
-          .welcome-left  { width: 100% !important; min-height: 400px !important; }
+          .welcome-left  { width: 100% !important; min-height: 400px !important; padding: 40px 20px !important; }
           .welcome-right { width: 100% !important; padding: 40px 20px !important; }
+          .logo-container { width: 280px !important; height: 280px !important; padding: 30px !important; }
+        }
+        @media (max-width: 480px) {
+          .logo-container { width: 200px !important; height: 200px !important; padding: 20px !important; }
+          .welcome-title { fontSize: '24px' !important; }
         }
         .gov-card:hover  { background: var(--primary-light) !important; border-color: var(--primary) !important; transform: translateY(-4px); }
         .cit-card:hover  { background: var(--surface) !important; border-color: var(--accent) !important; transform: translateY(-4px); }
@@ -46,7 +51,7 @@ export default function Welcome() {
           
           <div style={{ maxWidth: '600px', color: 'var(--text-primary)', position: 'relative', zIndex: 2 }}>
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '32px', marginBottom: '40px', textAlign: 'center' }}>
-              <div style={{ 
+              <div className="logo-container" style={{ 
                 width: '440px', height: '440px', borderRadius: '50%', background: 'var(--surface)', 
                 display: 'flex', alignItems: 'center', justifyContent: 'center', 
                 boxShadow: 'var(--shadow-lg)', border: '10px solid var(--accent)',

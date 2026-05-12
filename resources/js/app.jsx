@@ -5,6 +5,7 @@ import 'leaflet/dist/leaflet.css'
 import '../css/app.css'
 
 import { AuthProvider } from './context/AuthContext'
+import { UIProvider } from './context/UIContext'
 import ProtectedRoute from './components/ProtectedRoute'
 
 import Welcome        from './pages/Welcome'
@@ -24,31 +25,33 @@ import Priorizacion   from './pages/Priorizacion'
 
 function App() {
   return (
-    <AuthProvider>
-      <BrowserRouter>
-        <Routes>
-          {/* Public */}
-          <Route path="/bienvenido" element={<Welcome />} />
-          <Route path="/login"      element={<Login />} />
-          <Route path="/sin-permiso" element={<SinPermiso />} />
-
-          {/* Protected */}
-          <Route path="/" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
-          <Route path="/mapa" element={<ProtectedRoute><Mapa /></ProtectedRoute>} />
-          <Route path="/reportes" element={<ProtectedRoute><Reportes /></ProtectedRoute>} />
-          <Route path="/reportes/nuevo" element={<ProtectedRoute><NuevoReporte /></ProtectedRoute>} />
-          <Route path="/reportes/:id" element={<ProtectedRoute><ReporteDetalle /></ProtectedRoute>} />
-          <Route path="/reparadores" element={<ProtectedRoute><Reparadores /></ProtectedRoute>} />
-          <Route path="/reparadores/:id" element={<ProtectedRoute><ReparadorDetalle /></ProtectedRoute>} />
-          <Route path="/presupuestos" element={<ProtectedRoute requiredRole="autoridad"><Presupuestos /></ProtectedRoute>} />
-          <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
-          <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
-          <Route path="/priorizacion" element={<ProtectedRoute requiredRole="supervisor"><Priorizacion /></ProtectedRoute>} />
-
-          <Route path="*" element={<Navigate to="/bienvenido" replace />} />
-        </Routes>
-      </BrowserRouter>
-    </AuthProvider>
+    <UIProvider>
+      <AuthProvider>
+        <BrowserRouter>
+          <Routes>
+            {/* Public */}
+            <Route path="/bienvenido" element={<Welcome />} />
+            <Route path="/login"      element={<Login />} />
+            <Route path="/sin-permiso" element={<SinPermiso />} />
+  
+            {/* Protected */}
+            <Route path="/" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+            <Route path="/mapa" element={<ProtectedRoute><Mapa /></ProtectedRoute>} />
+            <Route path="/reportes" element={<ProtectedRoute><Reportes /></ProtectedRoute>} />
+            <Route path="/reportes/nuevo" element={<ProtectedRoute><NuevoReporte /></ProtectedRoute>} />
+            <Route path="/reportes/:id" element={<ProtectedRoute><ReporteDetalle /></ProtectedRoute>} />
+            <Route path="/reparadores" element={<ProtectedRoute><Reparadores /></ProtectedRoute>} />
+            <Route path="/reparadores/:id" element={<ProtectedRoute><ReparadorDetalle /></ProtectedRoute>} />
+            <Route path="/presupuestos" element={<ProtectedRoute requiredRole="autoridad"><Presupuestos /></ProtectedRoute>} />
+            <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
+            <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
+            <Route path="/priorizacion" element={<ProtectedRoute requiredRole="supervisor"><Priorizacion /></ProtectedRoute>} />
+  
+            <Route path="*" element={<Navigate to="/bienvenido" replace />} />
+          </Routes>
+        </BrowserRouter>
+      </AuthProvider>
+    </UIProvider>
   )
 }
 

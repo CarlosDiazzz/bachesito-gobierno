@@ -76,13 +76,88 @@
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
-body { font-family: 'Inter', sans-serif; background-color: var(--bg); color: var(--text-primary); -webkit-font-smoothing: antialiased; }
+html, body { 
+  font-family: 'Inter', sans-serif; 
+  background-color: var(--bg); 
+  color: var(--text-primary); 
+  -webkit-font-smoothing: antialiased; 
+  overflow-x: hidden; 
+  width: 100%;
+}
 
 /* Custom Scrollbar */
 ::-webkit-scrollbar { width: 8px; }
 ::-webkit-scrollbar-track { background: var(--bg); }
 ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
 ::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
+
+/* Layout Utilities */
+.main-layout {
+  display: flex;
+  min-height: 100vh;
+  background: var(--bg);
+  width: 100%;
+  overflow-x: hidden;
+}
+
+.content-wrapper {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  margin-left: 260px; /* Default sidebar width */
+  transition: margin-left 0.3s ease;
+  max-width: 100%;
+}
+
+.container-fluid {
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  width: 100%;
+}
+
+/* Responsive Grids */
+.grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+.grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+.grid-2 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; }
+.grid-map-sidebar { display: grid; grid-template-columns: 65fr 35fr; gap: 16px; }
+
+/* Responsive Media Queries */
+@media (max-width: 1200px) {
+  .grid-4 { grid-template-columns: repeat(2, 1fr); }
+  .grid-3 { grid-template-columns: repeat(2, 1fr); }
+  .grid-map-sidebar { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 1024px) {
+  .content-wrapper { margin-left: 0; }
+  .sidebar-hidden { transform: translateX(-260px); }
+  .sidebar-visible { transform: translateX(0); }
+}
+
+@media (max-width: 768px) {
+  .grid-4, .grid-3, .grid-2 { grid-template-columns: 1fr; }
+  .container-fluid { padding: 16px; gap: 16px; }
+  
+  /* TopBar mobile adjustments */
+  .topbar-content { padding: 0 16px !important; height: 80px !important; }
+  .topbar-logo { width: 60px !important; height: 60px !important; }
+  .topbar-title-group { display: none !important; }
+  .topbar-page-title { font-size: 16px !important; }
+}
+
+/* Helper Classes */
+.hidden-mobile { display: block; }
+@media (max-width: 768px) {
+  .hidden-mobile { display: none !important; }
+}
+
+.visible-mobile { display: none; }
+@media (max-width: 768px) {
+  .visible-mobile { display: block !important; }
+}
 
 /* Transitions */
 a, button { transition: all 0.2s ease-in-out; }

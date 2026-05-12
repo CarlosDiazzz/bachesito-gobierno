@@ -108,10 +108,13 @@ export default function Footer() {
         paddingTop: '20px', 
         borderTop: '1px solid var(--border)',
         display: 'flex',
+        flexDirection: window.innerWidth <= 768 ? 'column' : 'row',
+        gap: '12px',
         justifyContent: 'space-between',
         alignItems: 'center',
         fontSize: '11px',
-        color: 'var(--text-muted)'
+        color: 'var(--text-muted)',
+        textAlign: 'center'
       }}>
         <div>© 2026 Municipio de Oaxaca de Juárez · HackaTec</div>
         <div>Gobierno del Estado de Oaxaca</div>

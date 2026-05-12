@@ -42,16 +42,16 @@ export default function Reparadores() {
   }
 
   return (
-    <div style={{ display: 'flex', minHeight: '100vh', background: 'var(--bg)' }}>
+    <div className="main-layout">
       <Sidebar />
-      <div style={{ marginLeft: '260px', flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0 }}>
+      <div className="content-wrapper">
         <TopBar title="Reparadores" />
-        <div style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '24px' }}>
+        <div className="container-fluid">
 
           {reparadores.length === 0
             ? <div style={{ background: 'var(--surface)', borderRadius: 'var(--radius-md)', padding: '48px', textAlign: 'center', color: 'var(--text-muted)' }}>Sin reparadores registrados</div>
             : (
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px' }}>
+              <div className="grid-3">
                 {reparadores.map(r => {
                   const total = r.asignados + r.resueltos
                   const pct   = total > 0 ? (r.resueltos / total) * 100 : 0
@@ -84,7 +84,7 @@ export default function Reparadores() {
                       </div>
                       <button
                         onClick={() => navigate(`/reparadores/${r.id}`)}
-                        style={{ width: '100%', padding: '7px', borderRadius: '6px', border: '1px solid var(--primary)', color: 'var(--primary)', background: 'transparent', cursor: 'pointer', fontSize: '13px', fontWeight: 500 }}>
+                        style={{ width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid var(--primary)', color: 'var(--primary)', background: 'transparent', cursor: 'pointer', fontSize: '13px', fontWeight: 700 }}>
                         Ver detalle →
                       </button>
                     </div>
@@ -95,45 +95,47 @@ export default function Reparadores() {
           }
 
           {/* Asignaciones */}
-          <div style={{ background: 'var(--surface)', borderRadius: 'var(--radius-md)', boxShadow: 'var(--shadow-sm)', padding: '16px' }}>
+          <div style={{ background: 'var(--surface)', borderRadius: 'var(--radius-md)', boxShadow: 'var(--shadow-sm)', padding: '16px', overflow: 'hidden' }}>
             <h3 style={{ fontSize: '15px', fontWeight: 600, marginBottom: '16px' }}>Asignaciones recientes</h3>
-            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px' }}>
-              <thead style={{ background: 'var(--surface-2)' }}>
-                <tr style={{ color: 'var(--text-muted)', fontSize: '11px', textTransform: 'uppercase' }}>
-                  {['Folio','Vía','Reparador','Estado','Fecha asignación'].map(h => (
-                    <th key={h} style={{ textAlign: 'left', padding: '10px 12px', fontWeight: 500 }}>{h}</th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {asignaciones.length === 0
-                  ? <tr><td colSpan={5} style={{ padding: '24px', textAlign: 'center', color: 'var(--text-muted)' }}>Sin asignaciones activas</td></tr>
-                  : asignaciones.map(a => (
-                    <tr key={a.id} style={{ borderBottom: '1px solid var(--border)', transition: 'background 0.1s' }}
-                      onMouseEnter={e => e.currentTarget.style.background = 'var(--surface-2)'}
-                      onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
-                    >
-                      <td style={{ padding: '10px 12px', fontFamily: 'monospace', fontSize: '11px', color: 'var(--text-muted)' }}>{a.folio}</td>
-                      <td style={{ padding: '10px 12px', fontWeight: 500 }}>{a.nombre_via}</td>
-                      <td style={{ padding: '10px 12px' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                          <div style={{ width: 24, height: 24, borderRadius: '50%', background: 'var(--primary)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '10px', fontWeight: 700 }}>
-                            {getInitials(a.reparador ?? '')}
+            <div style={{ overflowX: 'auto' }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px', minWidth: '600px' }}>
+                <thead style={{ background: 'var(--surface-2)' }}>
+                  <tr style={{ color: 'var(--text-muted)', fontSize: '11px', textTransform: 'uppercase' }}>
+                    {['Folio','Vía','Reparador','Estado','Fecha asignación'].map(h => (
+                      <th key={h} style={{ textAlign: 'left', padding: '10px 12px', fontWeight: 500 }}>{h}</th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {asignaciones.length === 0
+                    ? <tr><td colSpan={5} style={{ padding: '24px', textAlign: 'center', color: 'var(--text-muted)' }}>Sin asignaciones activas</td></tr>
+                    : asignaciones.map(a => (
+                      <tr key={a.id} style={{ borderBottom: '1px solid var(--border)', transition: 'background 0.1s' }}
+                        onMouseEnter={e => e.currentTarget.style.background = 'var(--surface-2)'}
+                        onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+                      >
+                        <td style={{ padding: '10px 12px', fontFamily: 'monospace', fontSize: '11px', color: 'var(--text-muted)' }}>{a.folio}</td>
+                        <td style={{ padding: '10px 12px', fontWeight: 500 }}>{a.nombre_via}</td>
+                        <td style={{ padding: '10px 12px' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                            <div style={{ width: 24, height: 24, borderRadius: '50%', background: 'var(--primary)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '10px', fontWeight: 700 }}>
+                              {getInitials(a.reparador ?? '')}
+                            </div>
+                            {a.reparador ?? '—'}
                           </div>
-                          {a.reparador ?? '—'}
-                        </div>
-                      </td>
-                      <td style={{ padding: '10px 12px' }}>
-                        <Badge label={ESTADO_LABEL[a.estado_reporte] ?? a.estado_reporte} color={ESTADO_COLOR[a.estado_reporte]} bgColor={`${ESTADO_COLOR[a.estado_reporte]}22`} />
-                      </td>
-                      <td style={{ padding: '10px 12px', color: 'var(--text-muted)', fontSize: '12px' }}>
-                        {a.fecha_asignacion ? new Date(a.fecha_asignacion).toLocaleDateString('es-MX', { day: '2-digit', month: 'short', year: 'numeric' }) : '—'}
-                      </td>
-                    </tr>
-                  ))
-                }
-              </tbody>
-            </table>
+                        </td>
+                        <td style={{ padding: '10px 12px' }}>
+                          <Badge label={ESTADO_LABEL[a.estado_reporte] ?? a.estado_reporte} color={ESTADO_COLOR[a.estado_reporte]} bgColor={`${ESTADO_COLOR[a.estado_reporte]}22`} />
+                        </td>
+                        <td style={{ padding: '10px 12px', color: 'var(--text-muted)', fontSize: '12px' }}>
+                          {a.fecha_asignacion ? new Date(a.fecha_asignacion).toLocaleDateString('es-MX', { day: '2-digit', month: 'short', year: 'numeric' }) : '—'}
+                        </td>
+                      </tr>
+                    ))
+                  }
+                </tbody>
+              </table>
+            </div>
           </div>
 
         </div>

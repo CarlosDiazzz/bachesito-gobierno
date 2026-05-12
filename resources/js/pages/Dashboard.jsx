@@ -8,6 +8,7 @@ import Footer from '../components/Footer'
 import StatCard from '../components/StatCard'
 import MapaReportes from '../components/MapaReportes'
 import Badge from '../components/Badge'
+import { useUI } from '../context/UIContext'
 import { api } from '../lib/api'
 import { PRIORIDAD_COLOR, ESTADO_COLOR, ESTADO_LABEL } from '../data/mockData'
 
@@ -53,9 +54,9 @@ export default function Dashboard() {
 
   if (loading) {
     return (
-      <div style={{ display: 'flex', minHeight: '100vh', background: 'var(--bg)' }}>
+      <div className="main-layout">
         <Sidebar />
-        <div style={{ marginLeft: '260px', flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <div className="content-wrapper" style={{ alignItems: 'center', justifyContent: 'center' }}>
           <div style={{ width: 40, height: 40, borderRadius: '50%', border: '4px solid var(--border)', borderTop: '4px solid var(--primary)', animation: 'spin 0.8s linear infinite' }} />
           <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
         </div>
@@ -64,15 +65,15 @@ export default function Dashboard() {
   }
 
   return (
-    <div style={{ display: 'flex', minHeight: '100vh', background: 'var(--bg)' }}>
+    <div className="main-layout">
       <Sidebar />
-      <div style={{ marginLeft: '260px', flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0 }}>
+      <div className="content-wrapper">
         <TopBar title="PANEL DE CONTROL INSTITUCIONAL" />
         
-        <div style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
+        <div className="container-fluid">
 
           {/* Stat cards - High Density */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: '16px' }}>
+          <div className="grid-4">
             <StatCard icon={MapPin}        label="TOTAL REPORTES"    value={stats.total}         color="var(--primary)" />
             <StatCard icon={Shield}        label="BACHES CRÍTICOS"   value={stats.criticos}      color="var(--primary)"   trend={{ value: 12, positive: false }} />
             <StatCard icon={TrendingUp}    label="EN PROCESO"        value={stats.en_proceso}    color="var(--accent)" />
@@ -80,7 +81,7 @@ export default function Dashboard() {
           </div>
 
           {/* Mapa + críticos */}
-          <div style={{ display: 'grid', gridTemplateColumns: '65fr 35fr', gap: '16px' }}>
+          <div className="grid-map-sidebar">
             <div style={{ background: 'var(--surface)', borderRadius: 'var(--radius-md)', border: '1px solid var(--border)', padding: '16px' }}>
               <h3 style={{ fontSize: '13px', fontWeight: 900, marginBottom: '12px', textTransform: 'uppercase', letterSpacing: '1px', color: 'var(--primary)' }}>Mapa de Incidencias</h3>
               <div style={{ height: '360px', borderRadius: 'var(--radius-sm)', overflow: 'hidden', border: '1px solid var(--border)' }}>
@@ -112,7 +113,7 @@ export default function Dashboard() {
           </div>
 
           {/* Presupuesto + reparadores */}
-          <div style={{ display: 'grid', gridTemplateColumns: '50fr 50fr', gap: '16px' }}>
+          <div className="grid-2">
             <div style={{ background: 'var(--surface)', borderRadius: 'var(--radius-md)', border: '1px solid var(--border)', padding: '16px' }}>
               <h3 style={{ fontSize: '13px', fontWeight: 900, marginBottom: '16px', textTransform: 'uppercase', letterSpacing: '1px', color: 'var(--primary)' }}>Ejecución Presupuestal</h3>
               {presupuestos.length === 0

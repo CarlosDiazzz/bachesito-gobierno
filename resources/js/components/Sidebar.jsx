@@ -1,6 +1,7 @@
 import { NavLink, useNavigate } from 'react-router-dom'
 import { LayoutDashboard, MapPin, ClipboardList, Users, Wallet, LogOut, Brain } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
+import { useUI } from '../context/UIContext'
 
 const ALL_NAV = [
   { icon: LayoutDashboard, label: 'Dashboard',      path: '/',               roles: ['ciudadano','reparador','supervisor','autoridad'] },
@@ -17,6 +18,7 @@ function getInitials(name = '') {
 
 export default function Sidebar() {
   const { user, logout } = useAuth()
+  const { sidebarOpen, closeSidebar } = useUI()
   const navigate = useNavigate()
 
   const navItems = ALL_NAV.filter(item =>
@@ -29,18 +31,36 @@ export default function Sidebar() {
   }
 
   return (
-    <div style={{
-      width: '260px',
-      height: '100vh',
-      background: 'var(--sidebar-bg)',
-      position: 'fixed',
-      left: 0,
-      top: 0,
-      display: 'flex',
-      flexDirection: 'column',
-      zIndex: 2100,
-      borderRight: '1px solid rgba(255, 255, 255, 0.1)',
-    }}>
+    <>
+      {/* Overlay for mobile */}
+      {sidebarOpen && (
+        <div 
+          onClick={closeSidebar}
+          style={{
+            position: 'fixed',
+            inset: 0,
+            background: 'rgba(0,0,0,0.5)',
+            zIndex: 2050,
+            display: window.innerWidth > 1024 ? 'none' : 'block',
+            backdropFilter: 'blur(4px)',
+          }}
+        />
+      )}
+
+      <div style={{
+        width: '260px',
+        height: '100vh',
+        background: 'var(--sidebar-bg)',
+        position: 'fixed',
+        left: 0,
+        top: 0,
+        display: 'flex',
+        flexDirection: 'column',
+        zIndex: 2100,
+        borderRight: '1px solid rgba(255, 255, 255, 0.1)',
+        transform: sidebarOpen ? 'translateX(0)' : 'translateX(-100%)',
+        transition: 'transform 0.3s ease',
+      }}>
       {/* Navigation - Start immediately at the top */}
       <nav style={{ flex: 1, padding: '32px 16px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
         {navItems.map(({ icon: Icon, label, path }) => (
@@ -106,6 +126,7 @@ export default function Sidebar() {
           </button>
         </div>
       </div>
-    </div>
+      </div>
+    </>
   )
 }
