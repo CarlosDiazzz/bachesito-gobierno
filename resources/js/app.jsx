@@ -18,6 +18,7 @@ import NuevoReporte   from './pages/NuevoReporte'
 import Reparadores        from './pages/Reparadores'
 import ReparadorDetalle   from './pages/ReparadorDetalle'
 import Presupuestos   from './pages/Presupuestos'
+import Profile        from './pages/Profile'
 import Settings       from './pages/Settings'
 
 function App() {
@@ -39,6 +40,7 @@ function App() {
           <Route path="/reparadores" element={<ProtectedRoute><Reparadores /></ProtectedRoute>} />
           <Route path="/reparadores/:id" element={<ProtectedRoute><ReparadorDetalle /></ProtectedRoute>} />
           <Route path="/presupuestos" element={<ProtectedRoute requiredRole="autoridad"><Presupuestos /></ProtectedRoute>} />
+          <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
           <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
 
           <Route path="*" element={<Navigate to="/bienvenido" replace />} />

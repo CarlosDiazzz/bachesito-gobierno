@@ -1,13 +1,16 @@
 import { useState } from 'react'
-import { Shield, Eye, EyeOff, Accessibility, Bell, Lock, Save, ArrowLeft } from 'lucide-react'
+import { Accessibility, Bell, Save, ArrowLeft } from 'lucide-react'
 import Sidebar from '../components/Sidebar'
 import TopBar from '../components/TopBar'
 import { useNavigate } from 'react-router-dom'
 
 export default function Settings() {
   const navigate = useNavigate()
-  const [showPass, setShowPass] = useState(false)
-  
+  const [highContrast, setHighContrast] = useState(false)
+  const [largeText, setLargeText] = useState(false)
+  const [themeMode, setThemeMode] = useState('light')
+  const [applied, setApplied] = useState(false)
+
   const sectionStyle = {
     background: 'var(--surface)',
     borderRadius: 'var(--radius-lg)',
@@ -56,33 +59,6 @@ export default function Settings() {
             Preferencias Institucionales
           </h2>
 
-          {/* Seguridad Section */}
-          <div style={sectionStyle}>
-            <h3 style={{ fontSize: '16px', fontWeight: 800, marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '10px' }}>
-              <Lock size={18} color="var(--primary)" /> Seguridad y Acceso
-            </h3>
-            
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
-              <div>
-                <label style={labelStyle}>Contraseña Actual</label>
-                <div style={{ position: 'relative' }}>
-                  <input type={showPass ? 'text' : 'password'} style={inputStyle} defaultValue="********" />
-                  <button onClick={() => setShowPass(!showPass)} style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}>
-                    {showPass ? <EyeOff size={16} /> : <Eye size={16} />}
-                  </button>
-                </div>
-              </div>
-              <div>
-                <label style={labelStyle}>Nueva Contraseña</label>
-                <input type="password" style={inputStyle} placeholder="Mínimo 12 caracteres" />
-              </div>
-            </div>
-            
-            <button style={{ marginTop: '20px', padding: '10px 20px', background: 'var(--primary)', color: 'white', border: 'none', borderRadius: '6px', fontWeight: 700, fontSize: '13px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <Save size={16} /> Actualizar Credenciales
-            </button>
-          </div>
-
           {/* Accesibilidad Section */}
           <div style={sectionStyle}>
             <h3 style={{ fontSize: '16px', fontWeight: 800, marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '10px' }}>
@@ -95,7 +71,12 @@ export default function Settings() {
                   <div style={{ fontWeight: 700, fontSize: '14px' }}>Modo de Alto Contraste</div>
                   <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>Mejora la legibilidad de textos y bordes</div>
                 </div>
-                <input type="checkbox" style={{ width: '20px', height: '20px', accentColor: 'var(--primary)' }} />
+                <input
+                  type="checkbox"
+                  checked={highContrast}
+                  onChange={() => setHighContrast(!highContrast)}
+                  style={{ width: '20px', height: '20px', accentColor: 'var(--primary)' }}
+                />
               </div>
 
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px', background: 'var(--bg)', borderRadius: '8px' }}>
@@ -103,7 +84,27 @@ export default function Settings() {
                   <div style={{ fontWeight: 700, fontSize: '14px' }}>Texto Grande</div>
                   <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>Aumenta el tamaño de fuente en todo el panel</div>
                 </div>
-                <input type="checkbox" style={{ width: '20px', height: '20px', accentColor: 'var(--primary)' }} />
+                <input
+                  type="checkbox"
+                  checked={largeText}
+                  onChange={() => setLargeText(!largeText)}
+                  style={{ width: '20px', height: '20px', accentColor: 'var(--primary)' }}
+                />
+              </div>
+
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px', background: 'var(--bg)', borderRadius: '8px' }}>
+                <div>
+                  <div style={{ fontWeight: 700, fontSize: '14px' }}>Tema</div>
+                  <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>Cambiar entre modo claro y oscuro</div>
+                </div>
+                <select
+                  value={themeMode}
+                  onChange={(e) => setThemeMode(e.target.value)}
+                  style={{ padding: '10px 12px', borderRadius: '8px', border: '1px solid var(--border)', background: 'var(--bg)', color: 'var(--text-primary)', fontSize: '14px' }}
+                >
+                  <option value="light">Modo Claro</option>
+                  <option value="dark">Modo Oscuro</option>
+                </select>
               </div>
             </div>
           </div>
@@ -121,6 +122,31 @@ export default function Settings() {
                 Alertas Push: <b>Desactivado</b>
               </button>
             </div>
+            
+            <button
+              onClick={() => setApplied(true)}
+              style={{
+                marginTop: '24px',
+                width: '100%',
+                padding: '14px',
+                background: 'var(--primary)',
+                color: 'white',
+                border: 'none',
+                borderRadius: '10px',
+                fontSize: '14px',
+                fontWeight: 700,
+                cursor: 'pointer',
+                transition: 'background 0.2s',
+              }}
+            >
+              <Save size={16} style={{ marginRight: '8px' }} /> Aplicar configuración
+            </button>
+
+            {applied && (
+              <div style={{ marginTop: '16px', padding: '14px 16px', borderRadius: '10px', background: 'rgba(16, 185, 129, 0.1)', border: '1px solid rgba(16, 185, 129, 0.2)', color: 'var(--success)', fontWeight: 700 }}>
+                Configuración aplicada correctamente.
+              </div>
+            )}
           </div>
 
           <div style={{ textAlign: 'center', color: 'var(--text-muted)', fontSize: '11px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '1px' }}>
