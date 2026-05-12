@@ -1,71 +1,64 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
 
 :root {
-  /* Paleta Gobierno del Estado de Oaxaca 2022-2028 */
-  --oax-magenta:    #F44C63;
-  --oax-rosa:       #F44C63;
-  --oax-turquesa:   #00B0A6;
-  --oax-azul:       #0098D4;
-  --oax-purpura:    #8E418D;
-  --oax-amarillo:   #F6C541;
-  --oax-naranja:    #F98927;
-  --oax-verde:      #59B038;
-  --oax-guinda:     #9D2449;
-  --oax-ocre:       #B38E5D;
-  --oax-verde-osc:  #285C4D;
-  --oax-cantera:    #285C4D;
+  /* Paleta Modern Civic - Oaxaca Heritage */
+  --primary:        #691332; /* Guinda Oaxaqueño */
+  --primary-dark:   #4d0e25;
+  --primary-light:  #f5e8ed;
+  --accent:         #bc955c; /* Oro Oaxaqueño */
+  --accent-light:   #f4eee4;
+  --bg:             #f4f1ea; /* Crema de Cantera */
+  --surface:        #ffffff;
+  --surface-2:      #f0f0f0; /* Institutional Grey */
+  --border:         #e5e0d5; /* Crema Dark for borders */
+  --border-strong:  #bc955c44;
+  
+  --text-primary:   #1a1a1a;
+  --text-secondary: #4a4a4a;
+  --text-muted:     #7a7a7a;
+  
+  /* Sidebar */
+  --sidebar-bg:     #1a1a1a;
+  --sidebar-text:   #a0a0a0;
+  --sidebar-active: #bc955c;
 
-  /* UI tokens */
-  --primary:        #0098D4;
-  --primary-dark:   #0077A8;
-  --primary-light:  #E6F6FD;
-  --accent:         #00B0A6;
-  --accent-light:   #E0F7F6;
-  --danger:         #F44C63;
-  --danger-light:   #FEE8EB;
-  --warning:        #F98927;
-  --warning-light:  #FEF3E8;
-  --success:        #59B038;
-  --success-light:  #EDF7E8;
-  --purple:         #8E418D;
-  --purple-light:   #F3EAF3;
-  --guinda:         #9D2449;
-  --guinda-light:   #F5E8ED;
-
-  /* Neutrals */
-  --bg:             #F5F6FA;
-  --surface:        #FFFFFF;
-  --surface-2:      #F0F2F8;
-  --border:         #E2E6F0;
-  --border-strong:  #C8CEDF;
-  --text-primary:   #1A1D2E;
-  --text-secondary: #5A6080;
-  --text-muted:     #9099B8;
-  --sidebar-bg:     #1A1D2E;
-  --sidebar-text:   #C8CEDF;
-  --sidebar-active: #0098D4;
-
-  /* Prioridades */
-  --prio-critica:   #F44C63;
-  --prio-alta:      #F98927;
-  --prio-media:     #F6C541;
-  --prio-baja:      #59B038;
-
-  /* Estados */
-  --estado-pendiente:  #9099B8;
-  --estado-validado:   #0098D4;
-  --estado-asignado:   #8E418D;
-  --estado-en-proceso: #F98927;
-  --estado-resuelto:   #59B038;
-  --estado-rechazado:  #F44C63;
-
-  --radius-sm:  6px;
-  --radius-md:  10px;
-  --radius-lg:  16px;
+  /* UI Tokens */
+  --danger:         #691332;
+  --warning:        #bc955c;
+  --success:        #285C4D;
+  
+  --radius-sm:  4px;
+  --radius-md:  8px;
+  --radius-lg:  12px;
   --radius-xl:  24px;
-  --shadow-sm:  0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
-  --shadow-md:  0 4px 12px rgba(0,0,0,0.08);
-  --shadow-lg:  0 8px 24px rgba(0,0,0,0.10);
+  --radius-2xl: 32px;
+  
+  --shadow-sm:  0 2px 4px rgba(0,0,0,0.04);
+  --shadow-md:  0 4px 12px rgba(0,0,0,0.06);
+  --shadow-lg:  0 12px 32px rgba(0,0,0,0.08);
+
+  /* Patrón de Greca Zapoteca (Mitla) - Reverted to Authentic Step Pattern */
+  --pattern-greca: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='20' viewBox='0 0 100 20'%3E%3Cpath d='M0 20 L0 15 L5 15 L5 10 L10 10 L10 5 L15 5 L15 0 L25 0 L25 5 L20 5 L20 10 L15 10 L15 15 L10 15 L10 20 L30 20 L30 15 L25 15 L25 10 L30 10 L30 5 L35 5 L35 0 L45 0 L45 5 L40 5 L40 10 L35 10 L35 15 L30 15 L30 20 L50 20 L50 15 L45 15 L45 10 L50 10 L50 5 L55 5 L55 0 L65 0 L65 5 L60 5 L60 10 L55 10 L55 15 L50 15 L50 20 L70 20 L70 15 L65 15 L65 10 L70 10 L70 5 L75 5 L75 0 L85 0 L85 5 L80 5 L80 10 L75 10 L75 15 L70 15 L70 20 L90 20 L90 15 L85 15 L85 10 L90 10 L90 5 L95 5 L95 0 L100 0 L100 20 Z' fill='%23666666' fill-opacity='0.18'%3E%3C/path%3E%3C/svg%3E");
+
+  --sidebar-bg: #691332; /* Pure Institutional Guinda */
+}
+
+.bg-greca {
+  background-image: var(--pattern-greca);
+  background-repeat: repeat-x;
+  background-size: 80px 16px;
+}
+
+.greca-band {
+  background-image: var(--pattern-greca);
+  background-repeat: repeat-x;
+  background-size: 80px 16px;
+  height: 16px;
+  width: 100%;
+}
+
+.greca-band-gold {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='20' viewBox='0 0 100 20'%3E%3Cpath d='M0 20 L0 15 L5 15 L5 10 L10 10 L10 5 L15 5 L15 0 L25 0 L25 5 L20 5 L20 10 L15 10 L15 15 L10 15 L10 20 L30 20 L30 15 L25 15 L25 10 L30 10 L30 5 L35 5 L35 0 L45 0 L45 5 L40 5 L40 10 L35 10 L35 15 L30 15 L30 20 L50 20 L50 15 L45 15 L45 10 L50 10 L50 5 L55 5 L55 0 L65 0 L65 5 L60 5 L60 10 L55 10 L55 15 L50 15 L50 20 L70 20 L70 15 L65 15 L65 10 L70 10 L70 5 L75 5 L75 0 L85 0 L85 5 L80 5 L80 10 L75 10 L75 15 L70 15 L70 20 L90 20 L90 15 L85 15 L85 10 L90 10 L90 5 L95 5 L95 0 L100 0 L100 20 Z' fill='%23bc955c' fill-opacity='0.25'%3E%3C/path%3E%3C/svg%3E");
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; }

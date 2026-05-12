@@ -63,7 +63,7 @@ export default function Reportes() {
   return (
     <div style={{ display: 'flex', minHeight: '100vh', background: 'var(--bg)' }}>
       <Sidebar />
-      <div style={{ marginLeft: '240px', flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0 }}>
+      <div style={{ marginLeft: '260px', flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0 }}>
         <TopBar title="Gestión de Reportes" />
         <div style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
 

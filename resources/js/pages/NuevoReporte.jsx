@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { MapContainer, TileLayer, Marker, useMapEvents } from 'react-leaflet'
 import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
-import { Upload, MapPin, CheckCircle, XCircle, AlertTriangle, Loader, ChevronLeft } from 'lucide-react'
+import { Upload, MapPin, CheckCircle, XCircle, AlertTriangle, Loader, ChevronLeft, Shield } from 'lucide-react'
 import Sidebar from '../components/Sidebar'
 import TopBar from '../components/TopBar'
 import { useAuth } from '../context/AuthContext'
@@ -166,7 +166,7 @@ export default function NuevoReporte() {
     <div style={{ display: 'flex', minHeight: '100vh', background: 'var(--bg)' }}>
       <style>{`@keyframes spin { to { transform: rotate(360deg); } } .upload-zone:hover { border-color: var(--primary) !important; background: var(--primary-light) !important; }`}</style>
       <Sidebar />
-      <div style={{ marginLeft: '240px', flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0 }}>
+      <div style={{ marginLeft: '260px', flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0 }}>
         <TopBar title="Nuevo Reporte" />
         <div style={{ padding: '24px', maxWidth: '960px' }}>
 
@@ -180,7 +180,9 @@ export default function NuevoReporte() {
               {/* LEFT — Foto + AI */}
               <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                 <div style={{ background: 'var(--surface)', borderRadius: 'var(--radius-md)', boxShadow: 'var(--shadow-sm)', padding: '20px' }}>
-                  <h3 style={{ fontSize: '15px', fontWeight: 600, marginBottom: '12px' }}>📷 Foto del bache</h3>
+                  <h3 style={{ fontSize: '15px', fontWeight: 900, marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '8px', textTransform: 'uppercase', letterSpacing: '1px' }}>
+                    <MapPin size={18} style={{ color: 'var(--primary)' }} /> FOTO DEL BACHE
+                  </h3>
 
                   {fotoPreview ? (
                     <div style={{ position: 'relative' }}>
@@ -204,9 +206,9 @@ export default function NuevoReporte() {
 
                 {/* AI Result */}
                 <div style={{ background: 'var(--surface)', borderRadius: 'var(--radius-md)', boxShadow: 'var(--shadow-sm)', padding: '20px' }}>
-                  <h3 style={{ fontSize: '15px', fontWeight: 600, marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    🤖 Análisis IA
-                    <span style={{ fontSize: '11px', fontWeight: 400, color: 'var(--text-muted)' }}>GPT-4o Vision</span>
+                  <h3 style={{ fontSize: '15px', fontWeight: 900, marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '8px', textTransform: 'uppercase', letterSpacing: '1px' }}>
+                    <Shield size={18} style={{ color: 'var(--accent)' }} /> ANÁLISIS IA
+                    <span style={{ fontSize: '10px', fontWeight: 700, color: 'var(--text-muted)', marginLeft: 'auto', background: 'var(--bg)', padding: '2px 8px', borderRadius: '4px' }}>GPT-4o VISION</span>
                   </h3>
                   {!foto && !aiLoading
                     ? <p style={{ color: 'var(--text-muted)', fontSize: '13px' }}>Sube una foto para activar el análisis automático.</p>

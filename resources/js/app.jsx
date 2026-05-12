@@ -17,6 +17,7 @@ import ReporteDetalle from './pages/ReporteDetalle'
 import NuevoReporte   from './pages/NuevoReporte'
 import Reparadores    from './pages/Reparadores'
 import Presupuestos   from './pages/Presupuestos'
+import Settings       from './pages/Settings'
 
 function App() {
   return (
@@ -36,6 +37,7 @@ function App() {
           <Route path="/reportes/:id" element={<ProtectedRoute><ReporteDetalle /></ProtectedRoute>} />
           <Route path="/reparadores" element={<ProtectedRoute><Reparadores /></ProtectedRoute>} />
           <Route path="/presupuestos" element={<ProtectedRoute requiredRole="autoridad"><Presupuestos /></ProtectedRoute>} />
+          <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
 
           <Route path="*" element={<Navigate to="/bienvenido" replace />} />
         </Routes>

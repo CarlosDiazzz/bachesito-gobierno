@@ -34,66 +34,70 @@ export default function Login() {
   }
 
   return (
-    <div style={{ minHeight: '100vh', background: 'var(--bg)', fontFamily: 'Inter, sans-serif' }}>
+    <div style={{ minHeight: '100vh', background: 'var(--bg)', fontFamily: 'Inter, sans-serif', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
       <style>{`
         @keyframes spin { to { transform: rotate(360deg); } }
-        .login-input:focus { border-color: var(--primary) !important; box-shadow: 0 0 0 3px rgba(0,152,212,0.15) !important; outline: none; }
-        .quick-btn:hover   { background: var(--surface-2) !important; }
-        .submit-btn:hover:not(:disabled) { background: var(--primary-dark) !important; }
+        .login-input:focus { border-color: var(--primary) !important; box-shadow: 0 0 0 4px var(--primary-light) !important; outline: none; }
+        .quick-btn:hover   { background: var(--surface-2) !important; border-color: var(--accent) !important; color: var(--primary) !important; }
+        .submit-btn:hover:not(:disabled) { background: var(--primary-dark) !important; transform: translateY(-1px); box-shadow: var(--shadow-md); }
       `}</style>
 
-      <div style={{ maxWidth: '440px', margin: '0 auto', padding: '10vh 20px 40px' }}>
-        {/* Back arrow */}
-        <Link to="/bienvenido" style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', color: 'var(--text-secondary)', fontSize: '14px', marginBottom: '24px', textDecoration: 'none' }}>
-          ← Volver
-        </Link>
+      {/* Top Greca decoration for the whole page */}
+      <div className="greca-band" style={{ position: 'fixed', top: 0, opacity: 0.05, height: '120px' }} />
+
+      <div style={{ width: '100%', maxWidth: '440px', padding: '20px', position: 'relative', zIndex: 2 }}>
+        {/* Logo Section - Large & Centered */}
+        <div style={{ textAlign: 'center', marginBottom: '40px', paddingTop: '40px' }}>
+          <img 
+            src="/images/logo.png" 
+            alt="Logo Institucional" 
+            style={{ width: '220px', height: '220px', objectFit: 'contain', marginBottom: '16px' }} 
+          />
+          <div style={{ fontSize: '12px', fontWeight: 900, color: 'var(--accent)', letterSpacing: '4px', textTransform: 'uppercase' }}>
+            Atención Ciudadana
+          </div>
+          <p style={{ fontSize: '10px', fontWeight: 700, color: 'var(--text-muted)', letterSpacing: '2px', marginTop: '4px', textTransform: 'uppercase' }}>
+            Oaxaca de Juárez
+          </p>
+        </div>
 
         {/* Card */}
-        <div style={{ background: 'var(--surface)', borderRadius: 'var(--radius-xl)', boxShadow: 'var(--shadow-lg)', padding: '40px' }}>
-          {/* Header */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '32px' }}>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2px', width: '28px', height: '28px', flexShrink: 0 }}>
-              <div style={{ background: 'var(--oax-magenta)',  borderRadius: '2px' }} />
-              <div style={{ background: 'var(--oax-turquesa)', borderRadius: '2px' }} />
-              <div style={{ background: 'var(--oax-purpura)',  borderRadius: '2px' }} />
-              <div style={{ background: 'var(--oax-amarillo)', borderRadius: '2px' }} />
-            </div>
-            <div>
-              <div style={{ fontSize: '22px', fontWeight: 700, lineHeight: 1.2 }}>BachesITO</div>
-              <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>Gobierno de Oaxaca</div>
-            </div>
+        <div style={{ background: 'var(--surface)', borderRadius: 'var(--radius-xl)', boxShadow: 'var(--shadow-lg)', padding: '40px', border: '1px solid var(--border)' }}>
+          <div style={{ marginBottom: '24px' }}>
+            <h1 style={{ fontSize: '20px', fontWeight: 900, color: 'var(--text-primary)', textTransform: 'uppercase', letterSpacing: '1px' }}>Acceso Institucional</h1>
+            <p style={{ fontSize: '13px', color: 'var(--text-muted)', marginTop: '4px' }}>Ingresa tus credenciales oficiales</p>
           </div>
 
           <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
             {/* Email */}
             <div>
-              <label style={{ display: 'block', fontSize: '13px', fontWeight: 500, color: 'var(--text-secondary)', marginBottom: '6px' }}>
-                Correo electrónico
+              <label style={{ display: 'block', fontSize: '11px', fontWeight: 800, color: 'var(--text-secondary)', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '1px' }}>
+                Correo Institucional
               </label>
               <input
                 className="login-input"
                 type="email"
                 value={email}
                 onChange={e => setEmail(e.target.value)}
-                placeholder="admin@bachesito.gob.mx"
+                placeholder="usuario@oaxacadejuarez.gob.mx"
                 required
                 style={{
-                  width: '100%', padding: '12px 16px', borderRadius: 'var(--radius-md)',
+                  width: '100%', padding: '14px 16px', borderRadius: 'var(--radius-md)',
                   border: '1px solid var(--border)', fontSize: '15px',
-                  background: 'var(--surface)', color: 'var(--text-primary)',
-                  transition: 'border-color 0.2s, box-shadow 0.2s',
+                  background: 'var(--bg)', color: 'var(--text-primary)',
+                  transition: 'all 0.2s',
                 }}
               />
             </div>
 
             {/* Password */}
             <div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
-                <label style={{ fontSize: '13px', fontWeight: 500, color: 'var(--text-secondary)' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                <label style={{ fontSize: '11px', fontWeight: 800, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '1px' }}>
                   Contraseña
                 </label>
-                <a href="#" style={{ fontSize: '12px', color: 'var(--primary)', textDecoration: 'none' }}>
-                  ¿Olvidaste tu contraseña?
+                <a href="#" style={{ fontSize: '11px', color: 'var(--accent)', textDecoration: 'none', fontWeight: 700 }}>
+                  ¿Problemas de acceso?
                 </a>
               </div>
               <div style={{ position: 'relative' }}>
@@ -104,10 +108,10 @@ export default function Login() {
                   onChange={e => setPassword(e.target.value)}
                   required
                   style={{
-                    width: '100%', padding: '12px 44px 12px 16px', borderRadius: 'var(--radius-md)',
+                    width: '100%', padding: '14px 44px 14px 16px', borderRadius: 'var(--radius-md)',
                     border: '1px solid var(--border)', fontSize: '15px',
-                    background: 'var(--surface)', color: 'var(--text-primary)',
-                    transition: 'border-color 0.2s, box-shadow 0.2s',
+                    background: 'var(--bg)', color: 'var(--text-primary)',
+                    transition: 'all 0.2s',
                   }}
                 />
                 <button
@@ -127,10 +131,10 @@ export default function Login() {
             {/* Error */}
             {error && (
               <div style={{
-                display: 'flex', alignItems: 'center', gap: '8px',
-                background: 'var(--danger-light)', border: '1px solid rgba(244,76,99,0.3)',
-                borderRadius: 'var(--radius-md)', padding: '10px 14px',
-                color: 'var(--danger)', fontSize: '13px',
+                display: 'flex', alignItems: 'center', gap: '10px',
+                background: 'var(--primary-light)', border: '1px solid var(--primary)',
+                borderRadius: 'var(--radius-md)', padding: '12px',
+                color: 'var(--primary)', fontSize: '12px', fontWeight: 600
               }}>
                 <AlertCircle size={16} style={{ flexShrink: 0 }} />
                 {error}
@@ -143,11 +147,12 @@ export default function Login() {
               type="submit"
               disabled={loading}
               style={{
-                width: '100%', padding: '14px', borderRadius: 'var(--radius-md)',
+                width: '100%', padding: '16px', borderRadius: 'var(--radius-md)',
                 background: loading ? 'var(--text-muted)' : 'var(--primary)',
-                color: 'white', border: 'none', fontWeight: 600, fontSize: '15px',
-                cursor: loading ? 'not-allowed' : 'pointer', transition: 'background 0.2s',
-                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
+                color: 'white', border: 'none', fontWeight: 800, fontSize: '15px',
+                cursor: loading ? 'not-allowed' : 'pointer', transition: 'all 0.2s',
+                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px',
+                textTransform: 'uppercase', letterSpacing: '1px'
               }}
             >
               {loading && (
@@ -158,18 +163,18 @@ export default function Login() {
                   animation: 'spin 0.8s linear infinite',
                 }} />
               )}
-              {loading ? 'Verificando...' : 'Ingresar al panel'}
+              {loading ? 'Verificando...' : 'Entrar al Sistema'}
             </button>
           </form>
 
           {/* Quick access */}
-          <div style={{ marginTop: '24px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '12px' }}>
+          <div style={{ marginTop: '32px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '16px' }}>
               <div style={{ flex: 1, height: '1px', background: 'var(--border)' }} />
-              <span style={{ fontSize: '11px', color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>Acceso rápido (demo)</span>
+              <span style={{ fontSize: '10px', color: 'var(--text-muted)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '1px' }}>Entorno de Pruebas</span>
               <div style={{ flex: 1, height: '1px', background: 'var(--border)' }} />
             </div>
-            <div style={{ display: 'flex', gap: '8px' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '8px' }}>
               {quickUsers.map(u => (
                 <button
                   key={u.label}
@@ -177,10 +182,10 @@ export default function Login() {
                   className="quick-btn"
                   onClick={() => { setEmail(u.email); setPassword(u.password) }}
                   style={{
-                    flex: 1, padding: '6px 12px', borderRadius: 'var(--radius-md)',
+                    padding: '8px', borderRadius: '4px',
                     border: '1px solid var(--border)', background: 'transparent',
-                    fontSize: '12px', cursor: 'pointer', transition: 'background 0.15s',
-                    color: 'var(--text-secondary)',
+                    fontSize: '10px', fontWeight: 800, cursor: 'pointer', transition: 'all 0.15s',
+                    color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '1px'
                   }}
                 >
                   {u.label}
@@ -188,12 +193,20 @@ export default function Login() {
               ))}
             </div>
           </div>
+        </div>
 
-          <p style={{ fontSize: '11px', color: 'var(--text-muted)', textAlign: 'center', marginTop: '24px' }}>
-            Solo personal autorizado del Municipio de Oaxaca de Juárez
+        <div style={{ textAlign: 'center', marginTop: '24px' }}>
+          <Link to="/bienvenido" style={{ color: 'var(--accent)', fontSize: '13px', fontWeight: 700, textDecoration: 'none' }}>
+            ← Volver a Inicio
+          </Link>
+          <p style={{ fontSize: '10px', color: 'var(--text-muted)', marginTop: '16px', fontWeight: 600 }}>
+            H. AYUNTAMIENTO DE OAXACA DE JUÁREZ · 2026
           </p>
         </div>
       </div>
+      
+      {/* Bottom Greca */}
+      <div className="greca-band-gold" style={{ position: 'fixed', bottom: 0, height: '8px' }} />
     </div>
   )
 }
