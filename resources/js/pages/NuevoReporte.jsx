@@ -1,12 +1,12 @@
-import { useState, useRef, useCallback } from 'react'
+import { useState, useRef, useCallback, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { api } from '../lib/api'
 import { MapContainer, TileLayer, Marker, useMapEvents } from 'react-leaflet'
 import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
 import { Upload, MapPin, CheckCircle, XCircle, AlertTriangle, Loader, ChevronLeft, Shield } from 'lucide-react'
 import Sidebar from '../components/Sidebar'
 import TopBar from '../components/TopBar'
-import { useAuth } from '../context/AuthContext'
 
 delete L.Icon.Default.prototype._getIconUrl
 L.Icon.Default.mergeOptions({
@@ -83,7 +83,6 @@ function AiResultCard({ resultado, loading }) {
 
 export default function NuevoReporte() {
   const navigate = useNavigate()
-  const { user }  = useAuth()
   const fileRef   = useRef()
 
   const [foto,       setFoto]       = useState(null)
@@ -92,12 +91,59 @@ export default function NuevoReporte() {
   const [aiLoading,  setAiLoading]  = useState(false)
   const [aiError,    setAiError]    = useState(null)
   const [coords,     setCoords]     = useState(null)
-  const [form,       setForm]       = useState({ nombre_via: '', tipo_via: 'avenida_principal', descripcion: '', municipio_id: 20067 })
+  const [form,       setForm]       = useState({
+    nombre_via: '',
+    tipo_via: 'avenida_principal',
+    descripcion: '',
+    municipio_id: '',
+    colonia_id: '',
+    calle_id: '',
+    direccion_aproximada: '',
+  })
+  const [municipios, setMunicipios] = useState([])
+  const [ubicacionIA, setUbicacionIA] = useState(null)
+  const [ubicacionLoading, setUbicacionLoading] = useState(false)
+  const [ubicacionError, setUbicacionError] = useState(null)
   const [saving,     setSaving]     = useState(false)
   const [error,      setError]      = useState(null)
 
-  const getXsrf = () =>
-    decodeURIComponent(document.cookie.split(';').find(c => c.trim().startsWith('XSRF-TOKEN='))?.split('=')[1] ?? '')
+  useEffect(() => {
+    fetch('/api/municipios', { credentials: 'include', headers: { Accept: 'application/json' } })
+      .then(r => r.ok ? r.json() : [])
+      .then(data => {
+        setMunicipios(Array.isArray(data) ? data : [])
+      })
+      .catch(() => {})
+  }, [])
+
+  const autocompletarUbicacion = useCallback(async ([lat, lng]) => {
+    setCoords([lat, lng])
+    setUbicacionError(null)
+    setUbicacionLoading(true)
+
+    try {
+      const params = new URLSearchParams({
+        latitud: String(lat),
+        longitud: String(lng),
+      })
+      const data = await api.get(`/api/ubicacion/sugerir?${params.toString()}`)
+
+      setUbicacionIA(data)
+      setForm(prev => ({
+        ...prev,
+        municipio_id: data.municipio_id ? String(data.municipio_id) : prev.municipio_id,
+        colonia_id: data.colonia_id ? String(data.colonia_id) : '',
+        calle_id: data.calle_id ? String(data.calle_id) : '',
+        nombre_via: data.nombre_via ?? prev.nombre_via,
+        tipo_via: data.tipo_via ?? prev.tipo_via,
+        direccion_aproximada: data.direccion_aproximada ?? prev.direccion_aproximada,
+      }))
+    } catch (e) {
+      setUbicacionError(e.message ?? 'No fue posible autocompletar la ubicación')
+    } finally {
+      setUbicacionLoading(false)
+    }
+  }, [])
 
   const handleFoto = useCallback(async (file) => {
     if (!file) return
@@ -111,16 +157,7 @@ export default function NuevoReporte() {
     fd.append('foto', file)
 
     try {
-      const res = await fetch('/api/ai/preanalizar', {
-        method: 'POST',
-        credentials: 'include',
-        headers: { 'Accept': 'application/json', 'X-XSRF-TOKEN': getXsrf() },
-        body: fd,
-      })
-      const data = await res.json().catch(() => ({}))
-      if (!res.ok) {
-        throw new Error(data.message ?? 'No fue posible analizar la imagen con IA')
-      }
+      const data = await api.upload('/api/ai/preanalizar', fd)
       setAiResult(data)
     } catch (e) {
       setAiResult(null)
@@ -133,6 +170,7 @@ export default function NuevoReporte() {
   const handleSubmit = async (e) => {
     e.preventDefault()
     if (!coords) { setError('Selecciona la ubicación en el mapa'); return }
+    if (!form.municipio_id) { setError('Selecciona un municipio'); return }
     setSaving(true); setError(null)
 
     const fd = new FormData()
@@ -142,17 +180,13 @@ export default function NuevoReporte() {
     fd.append('tipo_via',   form.tipo_via)
     fd.append('descripcion', form.descripcion)
     fd.append('municipio_id', form.municipio_id)
+    if (form.colonia_id) fd.append('colonia_id', form.colonia_id)
+    if (form.calle_id) fd.append('calle_id', form.calle_id)
+    if (form.direccion_aproximada) fd.append('direccion_aproximada', form.direccion_aproximada)
     if (foto) fd.append('foto', foto)
 
     try {
-      const res = await fetch('/api/reportes', {
-        method: 'POST',
-        credentials: 'include',
-        headers: { 'Accept': 'application/json', 'X-XSRF-TOKEN': getXsrf() },
-        body: fd,
-      })
-      const data = await res.json()
-      if (!res.ok) throw new Error(data.message ?? 'Error al crear reporte')
+      const data = await api.upload('/api/reportes', fd)
       navigate(`/reportes/${data.id}`)
     } catch (err) {
       setError(err.message)
@@ -233,15 +267,37 @@ export default function NuevoReporte() {
                   <div style={{ height: '220px', borderRadius: 'var(--radius-md)', overflow: 'hidden' }}>
                     <MapContainer center={[17.0732, -96.7266]} zoom={14} style={{ width: '100%', height: '100%' }}>
                       <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" attribution='&copy; OpenStreetMap' />
-                      <LocationPicker value={coords} onChange={setCoords} />
+                      <LocationPicker value={coords} onChange={autocompletarUbicacion} />
                     </MapContainer>
                   </div>
                   {!coords && <p style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '6px' }}>Haz clic en el mapa para marcar el bache</p>}
                   {coords && <p style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '6px' }}>{coords[0].toFixed(6)}, {coords[1].toFixed(6)}</p>}
+                  {ubicacionLoading && <p style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '6px' }}>Analizando ubicación…</p>}
+                  {ubicacionError && <p style={{ fontSize: '12px', color: 'var(--danger)', marginTop: '6px' }}>{ubicacionError}</p>}
+                  {ubicacionIA?.direccion_aproximada && (
+                    <p style={{ fontSize: '12px', color: 'var(--text-secondary)', marginTop: '6px' }}>
+                      <strong>Dirección detectada:</strong> {ubicacionIA.direccion_aproximada}
+                    </p>
+                  )}
                 </div>
 
                 <div style={{ background: 'var(--surface)', borderRadius: 'var(--radius-md)', boxShadow: 'var(--shadow-sm)', padding: '20px', display: 'flex', flexDirection: 'column', gap: '14px' }}>
                   <h3 style={{ fontSize: '15px', fontWeight: 600 }}>Datos del reporte</h3>
+
+                  <div>
+                    <label style={{ display: 'block', fontSize: '13px', fontWeight: 500, color: 'var(--text-secondary)', marginBottom: '6px' }}>Municipio *</label>
+                    <select
+                      value={form.municipio_id}
+                      onChange={e => setForm(f => ({ ...f, municipio_id: e.target.value }))}
+                      required
+                      style={inputStyle}
+                    >
+                      <option value="">Selecciona un municipio</option>
+                      {municipios.map(m => (
+                        <option key={m.id} value={m.id}>{m.nombre}</option>
+                      ))}
+                    </select>
+                  </div>
 
                   <div>
                     <label style={{ display: 'block', fontSize: '13px', fontWeight: 500, color: 'var(--text-secondary)', marginBottom: '6px' }}>Nombre de la vía *</label>
@@ -265,6 +321,23 @@ export default function NuevoReporte() {
                     <textarea value={form.descripcion} onChange={e => setForm(f => ({...f, descripcion: e.target.value}))} placeholder="Describe el tamaño, profundidad y situación del bache..." required rows={3}
                       style={{...inputStyle, resize: 'vertical', fontFamily: 'inherit'}} />
                   </div>
+
+                  <div>
+                    <label style={{ display: 'block', fontSize: '13px', fontWeight: 500, color: 'var(--text-secondary)', marginBottom: '6px' }}>Dirección aproximada</label>
+                    <input
+                      value={form.direccion_aproximada}
+                      onChange={e => setForm(f => ({ ...f, direccion_aproximada: e.target.value }))}
+                      placeholder="Referencia detectada o manual"
+                      style={inputStyle}
+                    />
+                  </div>
+
+                  {(ubicacionIA?.colonia_nombre || ubicacionIA?.calle_nombre) && (
+                    <div style={{ padding: '10px 12px', border: '1px dashed var(--border-strong)', borderRadius: 'var(--radius-md)', background: 'var(--bg)' }}>
+                      {ubicacionIA?.colonia_nombre && <div style={{ fontSize: '12px', color: 'var(--text-secondary)' }}><strong>Colonia detectada:</strong> {ubicacionIA.colonia_nombre}</div>}
+                      {ubicacionIA?.calle_nombre && <div style={{ fontSize: '12px', color: 'var(--text-secondary)', marginTop: '4px' }}><strong>Calle detectada:</strong> {ubicacionIA.calle_nombre}</div>}
+                    </div>
+                  )}
 
                   {error && (
                     <div style={{ padding: '10px 14px', background: 'var(--danger-light)', border: '1px solid rgba(244,76,99,0.3)', borderRadius: 'var(--radius-md)', color: 'var(--danger)', fontSize: '13px', display: 'flex', gap: '8px', alignItems: 'center' }}>

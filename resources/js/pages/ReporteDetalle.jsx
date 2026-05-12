@@ -54,11 +54,6 @@ function EstadoTimeline({ estadoActual }) {
 const TIPO_LABEL = { ciudadano: 'Ciudadano', verificacion: 'Verificación', resolucion: 'Resolución' }
 const TIPO_COLOR = { ciudadano: 'var(--primary)', verificacion: 'var(--warning)', resolucion: 'var(--success)' }
 
-const getXsrf = () =>
-  decodeURIComponent(
-    document.cookie.split(';').find(c => c.trim().startsWith('XSRF-TOKEN='))?.split('=')[1] ?? ''
-  )
-
 function Lightbox({ fotos, indice, onClose }) {
   const [idx, setIdx] = useState(indice)
   const foto = fotos[idx]
@@ -119,14 +114,7 @@ function FotoGaleria({ fotos, reporteId, onFotosChange, onAiChange }) {
     fd.append('tipo', tipo)
     fd.append('re_analizar', reAnalizar ? '1' : '0')
     try {
-      const res = await fetch(`/api/reportes/${reporteId}/fotos`, {
-        method: 'POST',
-        credentials: 'include',
-        headers: { 'Accept': 'application/json', 'X-XSRF-TOKEN': getXsrf() },
-        body: fd,
-      })
-      const data = await res.json()
-      if (!res.ok) throw new Error(data.message ?? 'Error al subir')
+      const data = await api.upload(`/api/reportes/${reporteId}/fotos`, fd)
       onFotosChange(prev => [...prev, data.foto])
       if (data.ai_actualizado) onAiChange(data.ai_actualizado, data.score_prioridad, data.prioridad)
       cancelarPreview()
@@ -141,12 +129,7 @@ function FotoGaleria({ fotos, reporteId, onFotosChange, onAiChange }) {
     if (!confirm(`¿Eliminar esta foto (${TIPO_LABEL[foto.tipo]})?`)) return
     setDeleting(foto.id)
     try {
-      const res = await fetch(`/api/reportes/${reporteId}/fotos/${foto.id}`, {
-        method: 'DELETE',
-        credentials: 'include',
-        headers: { 'Accept': 'application/json', 'X-XSRF-TOKEN': getXsrf() },
-      })
-      if (!res.ok) throw new Error('Error al eliminar')
+      await api.delete(`/api/reportes/${reporteId}/fotos/${foto.id}`)
       onFotosChange(prev => prev.filter(f => f.id !== foto.id))
     } catch (e) {
       alert(e.message)
