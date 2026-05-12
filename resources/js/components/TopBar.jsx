@@ -106,7 +106,7 @@ export default function TopBar({ title }) {
               </div>
 
               {[
-                { icon: User, label: 'Mi Perfil', onClick: () => { navigate('/perfil'); setShowMenu(false); } },
+              { icon: User, label: 'Mi Perfil', onClick: () => { navigate('/profile'); setShowMenu(false); } },
                 { icon: Settings, label: 'Configuración', onClick: () => { navigate('/settings'); setShowMenu(false); } },
               ].map((item, i) => (
                 <div 

@@ -7,6 +7,7 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
 
 class AuthController extends Controller
 {
@@ -49,6 +50,42 @@ class AuthController extends Controller
         $request->user()->currentAccessToken()->delete();
 
         return response()->json(['message' => 'Sesión cerrada']);
+    }
+
+    public function updateProfile(Request $request)
+    {
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'email' => 'required|email|max:255|unique:users,email,' . $request->user()->id,
+            'phone' => 'nullable|string|max:30',
+        ]);
+
+        $user = $request->user();
+        $user->fill($request->only(['name', 'email', 'phone']));
+        $user->save();
+
+        return response()->json([
+            'message' => 'Perfil actualizado exitosamente',
+            'user' => $this->formatUser($user),
+        ]);
+    }
+
+    public function changePassword(Request $request)
+    {
+        $request->validate([
+            'current_password' => 'required|string',
+            'new_password' => 'required|string|min:12',
+        ]);
+
+        $user = $request->user();
+        if (! Hash::check($request->input('current_password'), $user->password)) {
+            return response()->json(['message' => 'La contraseña actual es incorrecta'], 422);
+        }
+
+        $user->password = Hash::make($request->input('new_password'));
+        $user->save();
+
+        return response()->json(['message' => 'Contraseña actualizada exitosamente']);
     }
 
     private function formatUser(User $user): array
