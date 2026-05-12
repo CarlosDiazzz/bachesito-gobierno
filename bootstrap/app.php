@@ -13,8 +13,9 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->statefulApi();
-        // CORS debe correr antes que auth para que el 401 incluya los headers correctos
-        $middleware->prependToGroup('api', \Illuminate\Http\Middleware\HandleCors::class);
+        $middleware->group('api', [
+            \Illuminate\Session\Middleware\StartSession::class,
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { ChevronLeft, MapPin, CheckCircle, XCircle, Clock, User, AlertTriangle } from 'lucide-react'
+import { ChevronLeft, MapPin, CheckCircle, XCircle, Clock, User, AlertTriangle, Shield } from 'lucide-react'
 import { MapContainer, TileLayer, CircleMarker } from 'react-leaflet'
 import 'leaflet/dist/leaflet.css'
 import Sidebar from '../components/Sidebar'
@@ -84,7 +84,7 @@ export default function ReporteDetalle() {
     return (
       <div style={{ display: 'flex', minHeight: '100vh', background: 'var(--bg)' }}>
         <Sidebar />
-        <div style={{ marginLeft: '240px', flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <div style={{ marginLeft: '260px', flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           <div style={{ width: 40, height: 40, borderRadius: '50%', border: '4px solid var(--border)', borderTop: '4px solid var(--primary)', animation: 'spin 0.8s linear infinite' }} />
           <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
         </div>
@@ -96,7 +96,7 @@ export default function ReporteDetalle() {
     return (
       <div style={{ display: 'flex', minHeight: '100vh', background: 'var(--bg)' }}>
         <Sidebar />
-        <div style={{ marginLeft: '240px', flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: '16px' }}>
+        <div style={{ marginLeft: '260px', flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: '16px' }}>
           <AlertTriangle size={48} style={{ color: 'var(--danger)' }} />
           <p style={{ color: 'var(--text-secondary)' }}>{error ?? 'Reporte no encontrado'}</p>
           <button onClick={() => navigate('/reportes')} style={{ padding: '8px 20px', borderRadius: '6px', background: 'var(--primary)', color: 'white', border: 'none', cursor: 'pointer' }}>Volver</button>
@@ -121,7 +121,7 @@ export default function ReporteDetalle() {
     <div style={{ display: 'flex', minHeight: '100vh', background: 'var(--bg)' }}>
       <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
       <Sidebar />
-      <div style={{ marginLeft: '240px', flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0 }}>
+      <div style={{ marginLeft: '260px', flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0 }}>
         <TopBar title="Detalle de Reporte" />
         <div style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
 
@@ -161,9 +161,9 @@ export default function ReporteDetalle() {
 
               {/* AI Analysis */}
               <div style={{ background: 'var(--surface)', borderRadius: 'var(--radius-md)', boxShadow: 'var(--shadow-sm)', padding: '20px' }}>
-                <h3 style={{ fontSize: '15px', fontWeight: 600, marginBottom: '14px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  🤖 Análisis IA
-                  {ai && <span style={{ fontSize: '11px', fontWeight: 400, color: 'var(--text-muted)' }}>{ai.modelo_usado}</span>}
+                <h3 style={{ fontSize: '15px', fontWeight: 900, marginBottom: '14px', display: 'flex', alignItems: 'center', gap: '8px', textTransform: 'uppercase', letterSpacing: '1px' }}>
+                  <Shield size={18} style={{ color: 'var(--accent)' }} /> Análisis IA
+                  {ai && <span style={{ fontSize: '10px', fontWeight: 700, color: 'var(--text-muted)', marginLeft: 'auto', background: 'var(--surface-2)', padding: '2px 8px', borderRadius: '4px' }}>{ai.modelo_usado?.toUpperCase()}</span>}
                 </h3>
                 {!ai
                   ? <p style={{ color: 'var(--text-muted)', fontSize: '13px' }}>Sin análisis disponible</p>

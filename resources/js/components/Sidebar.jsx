@@ -29,7 +29,7 @@ export default function Sidebar() {
 
   return (
     <div style={{
-      width: '240px',
+      width: '260px',
       height: '100vh',
       background: 'var(--sidebar-bg)',
       position: 'fixed',
@@ -37,26 +37,11 @@ export default function Sidebar() {
       top: 0,
       display: 'flex',
       flexDirection: 'column',
-      zIndex: 100,
+      zIndex: 2100,
+      borderRight: '1px solid rgba(255, 255, 255, 0.1)',
     }}>
-      {/* Logo */}
-      <div style={{ padding: '20px 20px 16px', borderBottom: '1px solid rgba(255,255,255,0.07)' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2px', width: '24px', height: '24px', flexShrink: 0 }}>
-            <div style={{ background: 'var(--oax-magenta)',  borderRadius: '2px' }} />
-            <div style={{ background: 'var(--oax-turquesa)', borderRadius: '2px' }} />
-            <div style={{ background: 'var(--oax-purpura)',  borderRadius: '2px' }} />
-            <div style={{ background: 'var(--oax-amarillo)', borderRadius: '2px' }} />
-          </div>
-          <div>
-            <div style={{ color: 'white', fontSize: '18px', fontWeight: 700, lineHeight: 1.2 }}>BachesITO</div>
-            <div style={{ color: 'var(--text-muted)', fontSize: '11px' }}>Gobierno de Oaxaca</div>
-          </div>
-        </div>
-      </div>
-
-      {/* Navigation */}
-      <nav style={{ flex: 1, padding: '12px 10px', display: 'flex', flexDirection: 'column', gap: '2px' }}>
+      {/* Navigation - Start immediately at the top */}
+      <nav style={{ flex: 1, padding: '32px 16px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
         {navItems.map(({ icon: Icon, label, path }) => (
           <NavLink
             key={path}
@@ -65,63 +50,60 @@ export default function Sidebar() {
             style={({ isActive }) => ({
               display: 'flex',
               alignItems: 'center',
-              gap: '10px',
-              padding: '10px',
+              gap: '14px',
+              padding: '14px 20px',
               borderRadius: '8px',
               fontSize: '14px',
-              fontWeight: isActive ? 500 : 400,
-              color: isActive ? 'white' : 'var(--sidebar-text)',
-              background: isActive ? 'rgba(0,152,212,0.20)' : 'transparent',
-              borderLeft: isActive ? '3px solid var(--sidebar-active)' : '3px solid transparent',
-              paddingLeft: isActive ? '7px' : '10px',
-              transition: 'background 0.15s',
+              fontWeight: isActive ? 900 : 500,
+              color: isActive ? 'white' : 'rgba(255,255,255,0.6)',
+              background: isActive ? '#4d0d24' : 'transparent', /* Darker Guinda for active item */
+              borderLeft: isActive ? '4px solid var(--accent)' : '4px solid transparent',
               textDecoration: 'none',
+              transition: 'all 0.2s',
+              textTransform: 'uppercase',
+              letterSpacing: '1px',
             })}
-            onMouseEnter={e => { if (!e.currentTarget.style.borderLeft.includes('var(--sidebar-active)')) e.currentTarget.style.background = 'rgba(255,255,255,0.05)' }}
-            onMouseLeave={e => { if (!e.currentTarget.style.borderLeft.includes('var(--sidebar-active)')) e.currentTarget.style.background = 'transparent' }}
           >
-            <Icon size={18} />
+            <Icon size={20} />
             {label}
           </NavLink>
         ))}
       </nav>
 
       {/* User */}
-      <div style={{ padding: '16px', borderTop: '1px solid rgba(255,255,255,0.07)', display: 'flex', alignItems: 'center', gap: '10px' }}>
-        <div style={{
-          width: 36, height: 36, borderRadius: '50%',
-          background: 'var(--oax-purpura)', color: 'white',
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          fontSize: '13px', fontWeight: 600, flexShrink: 0,
-        }}>
-          {getInitials(user?.name)}
-        </div>
-        <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{ color: 'white', fontSize: '13px', fontWeight: 500, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '118px' }}>
-            {user?.name?.slice(0, 18) || 'Usuario'}
-          </div>
-          <span style={{
-            display: 'inline-block', fontSize: '10px', fontWeight: 500,
-            color: 'white', background: 'var(--oax-turquesa)',
-            padding: '1px 6px', borderRadius: '999px', marginTop: '2px',
+      <div style={{ padding: '16px', borderTop: '1px solid rgba(255,255,255,0.05)', background: 'rgba(0,0,0,0.2)' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <div style={{
+            width: 32, height: 32, borderRadius: '4px',
+            background: 'var(--primary)', color: 'white',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            fontSize: '12px', fontWeight: 900, flexShrink: 0,
+            border: '1px solid var(--accent)',
           }}>
-            {user?.roles?.[0] || 'guest'}
-          </span>
+            {getInitials(user?.name)}
+          </div>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ color: 'white', fontSize: '12px', fontWeight: 700, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+              {user?.name?.toUpperCase() || 'USUARIO'}
+            </div>
+            <div style={{ fontSize: '9px', fontWeight: 700, color: 'var(--accent)', marginTop: '2px' }}>
+              {user?.roles?.[0]?.toUpperCase() || 'INVITADO'}
+            </div>
+          </div>
+          <button
+            onClick={handleLogout}
+            style={{
+              background: 'none', border: 'none', cursor: 'pointer',
+              color: '#ffffff', padding: '6px', borderRadius: '4px',
+              display: 'flex', alignItems: 'center', transition: 'color 0.2s',
+              opacity: 0.6
+            }}
+            onMouseEnter={e => e.currentTarget.style.opacity = '1'}
+            onMouseLeave={e => e.currentTarget.style.opacity = '0.6'}
+          >
+            <LogOut size={16} />
+          </button>
         </div>
-        <button
-          onClick={handleLogout}
-          title="Cerrar sesión"
-          style={{
-            background: 'none', border: 'none', cursor: 'pointer',
-            color: 'var(--text-muted)', padding: '4px', borderRadius: '4px',
-            display: 'flex', alignItems: 'center', flexShrink: 0,
-            transition: 'color 0.15s',
-          }}
-          onMouseEnter={e => e.currentTarget.style.color = 'var(--danger)'}
-          onMouseLeave={e => e.currentTarget.style.color = 'var(--text-muted)'}
-        >
-          <LogOut size={18} />
-        </button>
       </div>
     </div>
   )
