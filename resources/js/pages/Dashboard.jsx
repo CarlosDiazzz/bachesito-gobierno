@@ -125,10 +125,10 @@ export default function Dashboard() {
                         contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: 'var(--shadow-md)', fontSize: '12px' }}
                         formatter={v => [`$${v.toLocaleString('es-MX')}`, '']}
                       />
-                      <Bar dataKey="asignado" name="Asignado" fill="var(--bg)" radius={[4,4,0,0]} />
+                      <Bar dataKey="asignado" name="Asignado" fill="#bc955c22" radius={[4,4,0,0]} />
                       <Bar dataKey="ejercido"  name="Ejercido" radius={[4,4,0,0]}>
                         {presupuestos.map((entry, index) => (
-                          <Cell key={`cell-${index}`} fill={entry.ejercido > entry.asignado ? 'var(--primary)' : 'var(--accent)'} />
+                          <Cell key={`cell-${index}`} fill={entry.ejercido > entry.asignado ? '#691332' : '#9D2449'} />
                         ))}
                       </Bar>
                     </BarChart>

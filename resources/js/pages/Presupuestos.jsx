@@ -73,8 +73,8 @@ export default function Presupuestos() {
                   <BarChart data={porMes} barCategoryGap="30%">
                     <XAxis dataKey="mes" tick={{ fontSize: 12, fill: 'var(--text-secondary)' }} axisLine={false} tickLine={false} />
                     <Tooltip formatter={v => `$${Number(v).toLocaleString('es-MX')}`} />
-                    <Bar dataKey="asignado" name="Asignado" fill="#0098D466" radius={[4,4,0,0]} />
-                    <Bar dataKey="ejercido"  name="Ejercido"  fill="#0098D4"   radius={[4,4,0,0]} />
+                    <Bar dataKey="asignado" name="Asignado" fill="#9D244966" radius={[4,4,0,0]} />
+                    <Bar dataKey="ejercido"  name="Ejercido"  fill="#691332"   radius={[4,4,0,0]} />
                   </BarChart>
                 </ResponsiveContainer>
               )
@@ -126,12 +126,12 @@ export default function Presupuestos() {
                 <span>Ejercido: <strong>${Number(resumen.ejercido).toLocaleString('es-MX')}</strong> ({pct}%)</span>
               </div>
               <div style={{ height: '16px', background: 'var(--surface-2)', borderRadius: '8px', overflow: 'hidden', display: 'flex' }}>
-                <div style={{ width: `${pct}%`, background: 'var(--success)', transition: 'width 0.5s' }} />
-                <div style={{ flex: 1, background: 'var(--primary)', opacity: 0.3 }} />
+                <div style={{ width: `${pct}%`, background: 'var(--primary)', transition: 'width 0.5s' }} />
+                <div style={{ flex: 1, background: '#9D2449', opacity: 0.3 }} />
               </div>
               <div style={{ display: 'flex', gap: '16px', marginTop: '8px', fontSize: '12px' }}>
-                <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><span style={{ display: 'inline-block', width: 10, height: 10, background: 'var(--success)', borderRadius: '2px' }} /> Ejercido</span>
-                <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><span style={{ display: 'inline-block', width: 10, height: 10, background: 'var(--primary)', opacity: 0.3, borderRadius: '2px' }} /> Disponible</span>
+                <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><span style={{ display: 'inline-block', width: 10, height: 10, background: 'var(--primary)', borderRadius: '2px' }} /> Ejercido</span>
+                <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><span style={{ display: 'inline-block', width: 10, height: 10, background: '#9D2449', opacity: 0.3, borderRadius: '2px' }} /> Disponible</span>
               </div>
             </div>
           )}
