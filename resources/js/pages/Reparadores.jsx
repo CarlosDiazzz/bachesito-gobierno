@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
 import Sidebar from '../components/Sidebar'
 import TopBar from '../components/TopBar'
 import Badge from '../components/Badge'
@@ -9,7 +10,10 @@ function getInitials(name = '') {
   return name.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase() || '?'
 }
 
+const ROL_COLOR = { supervisor: 'var(--purple)', reparador: 'var(--primary)', autoridad: 'var(--guinda)' }
+
 export default function Reparadores() {
+  const navigate = useNavigate()
   const [reparadores,  setReparadores]  = useState([])
   const [asignaciones, setAsignaciones] = useState([])
   const [loading,      setLoading]      = useState(true)
@@ -54,12 +58,15 @@ export default function Reparadores() {
                   return (
                     <div key={r.id} style={{ background: 'var(--surface)', borderRadius: 'var(--radius-md)', boxShadow: 'var(--shadow-sm)', padding: '20px' }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px' }}>
-                        <div style={{ width: 48, height: 48, borderRadius: '50%', background: 'var(--primary)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '16px', fontWeight: 700, flexShrink: 0 }}>
+                        <div style={{ width: 48, height: 48, borderRadius: '50%', background: ROL_COLOR[r.rol] ?? 'var(--primary)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '16px', fontWeight: 700, flexShrink: 0 }}>
                           {getInitials(r.name)}
                         </div>
-                        <div>
-                          <div style={{ fontWeight: 600, fontSize: '15px' }}>{r.name}</div>
-                          <Badge label={r.status === 'activo' ? 'Activo' : 'Inactivo'} color={r.status === 'activo' ? 'var(--success)' : 'var(--text-muted)'} bgColor={r.status === 'activo' ? 'var(--success-light)' : 'var(--surface-2)'} />
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <div style={{ fontWeight: 600, fontSize: '15px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{r.name}</div>
+                          <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap', marginTop: '3px' }}>
+                            <Badge label={r.rol?.charAt(0).toUpperCase() + r.rol?.slice(1) ?? 'Reparador'} color={ROL_COLOR[r.rol] ?? 'var(--primary)'} bgColor={`${ROL_COLOR[r.rol] ?? 'var(--primary)'}22`} />
+                            <Badge label={r.status === 'activo' ? 'Activo' : 'Inactivo'} color={r.status === 'activo' ? 'var(--success)' : 'var(--text-muted)'} bgColor={r.status === 'activo' ? 'var(--success-light)' : 'var(--surface-2)'} />
+                          </div>
                         </div>
                       </div>
                       <div style={{ display: 'flex', gap: '16px', marginBottom: '14px', fontSize: '13px' }}>
@@ -75,7 +82,11 @@ export default function Reparadores() {
                           <div style={{ width: `${pct}%`, height: '100%', background: 'var(--success)', borderRadius: '3px' }} />
                         </div>
                       </div>
-                      <button style={{ width: '100%', padding: '7px', borderRadius: '6px', border: '1px solid var(--primary)', color: 'var(--primary)', background: 'transparent', cursor: 'pointer', fontSize: '13px', fontWeight: 500 }}>Ver detalle</button>
+                      <button
+                        onClick={() => navigate(`/reparadores/${r.id}`)}
+                        style={{ width: '100%', padding: '7px', borderRadius: '6px', border: '1px solid var(--primary)', color: 'var(--primary)', background: 'transparent', cursor: 'pointer', fontSize: '13px', fontWeight: 500 }}>
+                        Ver detalle →
+                      </button>
                     </div>
                   )
                 })}

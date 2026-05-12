@@ -46,8 +46,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::delete('/presupuestos/{presupuesto}',   [PresupuestoController::class, 'destroy']);
 
     // Reparadores
-    Route::get('/reparadores',             [ReparadorController::class, 'index']);
-    Route::get('/reparadores/asignaciones',[ReparadorController::class, 'asignaciones']);
+    Route::get('/reparadores',              [ReparadorController::class, 'index']);
+    Route::get('/reparadores/asignaciones', [ReparadorController::class, 'asignaciones']);
+    Route::get('/reparadores/{id}',         [ReparadorController::class, 'show']);
     Route::get('/ubicacion/sugerir',       [UbicacionController::class, 'sugerir']);
 });
 

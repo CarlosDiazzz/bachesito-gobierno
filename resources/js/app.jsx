@@ -15,7 +15,8 @@ import Mapa           from './pages/Mapa'
 import Reportes       from './pages/Reportes'
 import ReporteDetalle from './pages/ReporteDetalle'
 import NuevoReporte   from './pages/NuevoReporte'
-import Reparadores    from './pages/Reparadores'
+import Reparadores        from './pages/Reparadores'
+import ReparadorDetalle   from './pages/ReparadorDetalle'
 import Presupuestos   from './pages/Presupuestos'
 import Settings       from './pages/Settings'
 
@@ -36,6 +37,7 @@ function App() {
           <Route path="/reportes/nuevo" element={<ProtectedRoute><NuevoReporte /></ProtectedRoute>} />
           <Route path="/reportes/:id" element={<ProtectedRoute><ReporteDetalle /></ProtectedRoute>} />
           <Route path="/reparadores" element={<ProtectedRoute><Reparadores /></ProtectedRoute>} />
+          <Route path="/reparadores/:id" element={<ProtectedRoute><ReparadorDetalle /></ProtectedRoute>} />
           <Route path="/presupuestos" element={<ProtectedRoute requiredRole="autoridad"><Presupuestos /></ProtectedRoute>} />
           <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
 
@@ -47,4 +49,8 @@ function App() {
 }
 
 const root = document.getElementById('app')
-if (root) createRoot(root).render(<App />)
+if (root) {
+  const existingRoot = root.__reactRoot ?? createRoot(root)
+  root.__reactRoot = existingRoot
+  existingRoot.render(<App />)
+}
