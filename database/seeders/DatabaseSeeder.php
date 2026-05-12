@@ -14,16 +14,21 @@ class DatabaseSeeder extends Seeder
     public function run(): void
     {
         $this->call([
+            // Catálogos geográficos
             EstadoSeeder::class,
             MunicipioSeeder::class,
             ColoniaSeeder::class,
             CalleSeeder::class,
+            // Sistema
             RolesPermissionsSeeder::class,
             InsigniasSeeder::class,
             DependenciaSeeder::class,
             ZonaSeeder::class,
+            // Usuarios y presupuesto base
             AdminSeeder::class,
             PresupuestoSeeder::class,
+            // Datos de demostración (baches, fotos, IA, historial, asignaciones)
+            DemoDataSeeder::class,
         ]);
     }
 }
