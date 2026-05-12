@@ -20,6 +20,7 @@ import ReparadorDetalle   from './pages/ReparadorDetalle'
 import Presupuestos   from './pages/Presupuestos'
 import Profile        from './pages/Profile'
 import Settings       from './pages/Settings'
+import Priorizacion   from './pages/Priorizacion'
 
 function App() {
   return (
@@ -42,6 +43,7 @@ function App() {
           <Route path="/presupuestos" element={<ProtectedRoute requiredRole="autoridad"><Presupuestos /></ProtectedRoute>} />
           <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
           <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
+          <Route path="/priorizacion" element={<ProtectedRoute requiredRole="supervisor"><Priorizacion /></ProtectedRoute>} />
 
           <Route path="*" element={<Navigate to="/bienvenido" replace />} />
         </Routes>

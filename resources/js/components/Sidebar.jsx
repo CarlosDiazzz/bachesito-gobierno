@@ -1,13 +1,14 @@
 import { NavLink, useNavigate } from 'react-router-dom'
-import { LayoutDashboard, MapPin, ClipboardList, Users, Wallet, LogOut } from 'lucide-react'
+import { LayoutDashboard, MapPin, ClipboardList, Users, Wallet, LogOut, Brain } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 
 const ALL_NAV = [
-  { icon: LayoutDashboard, label: 'Dashboard',      path: '/',             roles: ['ciudadano','reparador','supervisor','autoridad'] },
-  { icon: MapPin,          label: 'Mapa de Baches', path: '/mapa',         roles: ['reparador','supervisor','autoridad'] },
-  { icon: ClipboardList,   label: 'Reportes',        path: '/reportes',    roles: ['reparador','supervisor','autoridad'] },
-  { icon: Users,           label: 'Reparadores',     path: '/reparadores', roles: ['supervisor','autoridad'] },
-  { icon: Wallet,          label: 'Presupuestos',    path: '/presupuestos',roles: ['autoridad'] },
+  { icon: LayoutDashboard, label: 'Dashboard',      path: '/',               roles: ['ciudadano','reparador','supervisor','autoridad'] },
+  { icon: MapPin,          label: 'Mapa de Baches', path: '/mapa',           roles: ['reparador','supervisor','autoridad'] },
+  { icon: ClipboardList,   label: 'Reportes',       path: '/reportes',       roles: ['reparador','supervisor','autoridad'] },
+  { icon: Brain,           label: 'Priorización IA', path: '/priorizacion',  roles: ['supervisor','autoridad'] },
+  { icon: Users,           label: 'Reparadores',    path: '/reparadores',    roles: ['supervisor','autoridad'] },
+  { icon: Wallet,          label: 'Presupuestos',   path: '/presupuestos',   roles: ['autoridad'] },
 ]
 
 function getInitials(name = '') {

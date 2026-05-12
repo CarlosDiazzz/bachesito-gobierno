@@ -10,6 +10,7 @@ use App\Http\Controllers\Api\MexicoController;
 use App\Http\Controllers\Api\AiController;
 use App\Http\Controllers\Api\GaleriaController;
 use App\Http\Controllers\Api\UbicacionController;
+use App\Http\Controllers\Api\AnalisisController;
 
 // Públicas
 Route::post('/auth/login',           [AuthController::class,  'login']);
@@ -54,6 +55,10 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/reparadores/asignaciones', [ReparadorController::class, 'asignaciones']);
     Route::get('/reparadores/{id}',         [ReparadorController::class, 'show']);
     Route::get('/ubicacion/sugerir',       [UbicacionController::class, 'sugerir']);
+
+    // Análisis TOPSIS + IA
+    Route::get('/analisis/topsis',              [AnalisisController::class, 'topsis']);
+    Route::post('/analisis/ia-recomendacion',   [AnalisisController::class, 'iaRecomendacion']);
 });
 
 // Catálogos — public
