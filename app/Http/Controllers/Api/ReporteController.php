@@ -128,6 +128,18 @@ class ReporteController extends Controller
         return response()->json($this->service->formato($reporte), 201);
     }
 
+    // Bounding box del municipio de Oaxaca de Juárez y área metropolitana
+    private const OAXACA_BOUNDS = [
+        'lat_min' => 16.90, 'lat_max' => 17.25,
+        'lng_min' => -96.95, 'lng_max' => -96.50,
+    ];
+
+    private function enOaxaca(float $lat, float $lng): bool
+    {
+        return $lat >= self::OAXACA_BOUNDS['lat_min'] && $lat <= self::OAXACA_BOUNDS['lat_max']
+            && $lng >= self::OAXACA_BOUNDS['lng_min'] && $lng <= self::OAXACA_BOUNDS['lng_max'];
+    }
+
     public function storeCiudadano(Request $request)
     {
         $request->validate([
@@ -140,6 +152,12 @@ class ReporteController extends Controller
             'municipio_id'       => 'nullable|integer|exists:municipios,id',
             'location_source'    => 'nullable|in:exif,gps,manual',
         ]);
+
+        if (! $this->enOaxaca((float) $request->latitud, (float) $request->longitud)) {
+            return response()->json([
+                'message' => 'La ubicación indicada está fuera del municipio de Oaxaca de Juárez. Solo se pueden registrar baches dentro del área de cobertura del sistema.',
+            ], 422);
+        }
 
         $ciudadanoId = \App\Models\User::where('email', 'ciudadano@bachesito.gob.mx')->value('id') ?? 1;
 
@@ -329,6 +347,10 @@ class ReporteController extends Controller
         $lat   = (float) $request->lat;
         $lng   = (float) $request->lng;
         $radio = (int) ($request->radio ?? 80);
+
+        if (! $this->enOaxaca($lat, $lng)) {
+            return response()->json([]);
+        }
 
         // Bounding box rápido en SQL, luego Haversine exacto en PHP
         $deltaLat = $radio / 111000;
