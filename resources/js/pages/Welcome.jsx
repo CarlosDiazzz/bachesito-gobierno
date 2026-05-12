@@ -31,7 +31,7 @@ export default function Welcome() {
         {/* LEFT — Branding & Greca */}
         <div className="welcome-left" style={{
           flex: 1.2,
-          backgroundImage: 'linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.4)), url("/images/imagen_calle.jpeg")',
+          backgroundImage: 'linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.4)), url("/images/imagen_calle.png")',
           backgroundSize: 'cover',
           backgroundPosition: 'center',
           position: 'relative',
