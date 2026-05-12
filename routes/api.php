@@ -8,6 +8,7 @@ use App\Http\Controllers\Api\PresupuestoController;
 use App\Http\Controllers\Api\ReparadorController;
 use App\Http\Controllers\Api\MexicoController;
 use App\Http\Controllers\Api\AiController;
+use App\Http\Controllers\Api\GaleriaController;
 
 // Públicas
 Route::post('/auth/login',           [AuthController::class,  'login']);
@@ -32,6 +33,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/reportes/{reporte}',           [ReporteController::class, 'show']);
     Route::patch('/reportes/{reporte}/estado',  [ReporteController::class, 'updateEstado']);
     Route::post('/reportes/{reporte}/asignar',  [ReporteController::class, 'asignar']);
+    Route::get('/galeria', [GaleriaController::class, 'index']);
+    Route::post('/galeria', [GaleriaController::class, 'store']);
 
     // Presupuestos
     Route::get('/presupuestos',                    [PresupuestoController::class, 'index']);
