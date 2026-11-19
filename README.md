@@ -80,6 +80,39 @@ Sigue estos pasos para poner en marcha el proyecto localmente:
    npm run dev
    ```
 
+## 📊 Módulo DSS (Proyecto Integrador DSTD)
+
+Módulo agregado para la materia **Desarrollo de Software para la Toma de Decisiones**. Se
+construye sobre el sistema existente sin modificar la tabla `reportes`.
+
+**Ya existía antes del módulo (base del sistema):**
+- `app/Services/TopsisService.php`: ranking TOPSIS con escenarios *equilibrado* y *rezago* y filtros.
+- `GET /api/analisis/topsis` y la pantalla `Priorizacion.jsx` (ranking, zonas, comparación de escenarios y recomendación IA).
+- La validación geográfica de reportes dentro de Oaxaca de Juárez (`ReporteController::OAXACA_BOUNDS`).
+
+**Agregado para la materia (prefijo / carpeta `Dss`):**
+
+| Componente | Ubicación |
+|---|---|
+| Proceso ETL (extraer → transformar → cargar) con 5 reglas de limpieza | `app/Services/Dss/EtlService.php` |
+| Comando de consola `php artisan dss:etl` | `app/Console/Commands/DssEtlCommand.php` |
+| Tablas `dss_etl_ejecuciones`, `dss_etl_anomalias`, `dss_reportes_limpios` | `database/migrations/2026_11_19_*` y modelos `app/Models/Dss*.php` |
+| API `/api/dss/etl/{ultima,anomalias,ejecutar}` | `app/Http/Controllers/Api/DssController.php` |
+| Pestaña **Calidad de datos** en Priorización | `resources/js/components/dss/TabCalidadDatos.jsx` |
+| Datos sucios simulados (folios `SIM-`) | `database/seeders/DatosSuciosSeeder.php` |
+| Pruebas de cada regla y de reproducibilidad | `tests/Feature/Dss/EtlServiceTest.php` |
+| Documentación | [`docs/dss/diccionario-datos.md`](docs/dss/diccionario-datos.md), [`docs/dss/etl.md`](docs/dss/etl.md) |
+
+Único cambio en código existente: `ReporteController::OAXACA_BOUNDS` pasó de `private` a `public` para
+reutilizar los mismos límites geográficos en el ETL.
+
+```bash
+php artisan migrate
+php artisan db:seed --class=DatosSuciosSeeder   # opcional: datos de demostración con errores
+php artisan dss:etl
+php artisan test tests/Feature/Dss
+```
+
 ## 🏛️ Identidad Visual
 
 El proyecto utiliza los colores oficiales del Municipio de Oaxaca de Juárez:
