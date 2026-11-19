@@ -11,6 +11,7 @@ use App\Models\ReporteFoto;
 use App\Services\ReporteService;
 use App\Services\AiService;
 use App\Services\ScoreService;
+use App\Services\UbicacionService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 
@@ -20,6 +21,7 @@ class ReporteController extends Controller
         private ReporteService $service,
         private AiService      $aiService,
         private ScoreService   $scoreService,
+        private UbicacionService $ubicacion,
     ) {}
 
     public function index(Request $request)
@@ -151,6 +153,10 @@ class ReporteController extends Controller
             'direccion_aproximada' => 'nullable|string|max:500',
             'municipio_id'       => 'nullable|integer|exists:municipios,id',
             'location_source'    => 'nullable|in:exif,gps,manual',
+            // Opcionales: texto de colonia/municipio que la app obtuvo o que escribió el ciudadano
+            'colonia_id'         => 'nullable|integer|exists:colonias,id',
+            'colonia'            => 'nullable|string|max:150',
+            'municipio'          => 'nullable|string|max:150',
         ]);
 
         if (! $this->enOaxaca((float) $request->latitud, (float) $request->longitud)) {
@@ -161,6 +167,16 @@ class ReporteController extends Controller
 
         $ciudadanoId = \App\Models\User::where('email', 'ciudadano@bachesito.gob.mx')->value('id') ?? 1;
 
+        // Municipio y colonia a partir de las coordenadas (Nominatim con timeout corto y
+        // catálogo local). Si Nominatim falla, el registro continúa con lo que se pueda resolver.
+        $ubicacion = $this->ubicacion->resolverParaRegistro(
+            (float) $request->latitud,
+            (float) $request->longitud,
+            $request->input('colonia'),
+            $request->input('municipio'),
+            $request->filled('municipio_id') ? (int) $request->municipio_id : null,
+        );
+
         $reporte = Reporte::create([
             'ciudadano_id'        => $ciudadanoId,
             'latitud'             => $request->latitud,
@@ -168,7 +184,8 @@ class ReporteController extends Controller
             'nombre_via'          => $request->nombre_via ?? 'Sin nombre',
             'descripcion'         => $request->descripcion,
             'direccion_aproximada'=> $request->direccion_aproximada,
-            'municipio_id'        => $request->municipio_id,
+            'municipio_id'        => $ubicacion['municipio_id'],
+            'colonia_id'          => $request->filled('colonia_id') ? (int) $request->colonia_id : $ubicacion['colonia_id'],
             'tipo_via'            => 'calle_secundaria',
             'fecha_reporte'       => now(),
         ]);
@@ -196,13 +213,14 @@ class ReporteController extends Controller
         }
 
         $this->scoreService->calcular($reporte->fresh(['aiAnalisis']));
-        $reporte->load(['municipio:id,nombre', 'fotos']);
+        $reporte->load(['municipio:id,nombre', 'colonia:id,nombre', 'fotos']);
 
         return response()->json([
             'folio'      => $reporte->folio,
             'id'         => $reporte->id,
             'estado'     => $reporte->estado,
             'municipio'  => $reporte->municipio?->nombre,
+            'colonia'    => $reporte->colonia?->nombre,
             'nombre_via' => $reporte->nombre_via,
             'latitud'    => $reporte->latitud,
             'longitud'   => $reporte->longitud,
