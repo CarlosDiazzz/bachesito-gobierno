@@ -2,6 +2,9 @@
 
 namespace App\Services;
 
+use App\Models\DssEtlAnomalia;
+use App\Models\DssEtlEjecucion;
+use App\Models\DssReporteLimpio;
 use App\Models\Reporte;
 use Illuminate\Support\Collection;
 
@@ -92,11 +95,37 @@ public function escenarioActual(): string
 
         $this->aplicarFiltros($query, $filtros);
 
-        $reportes = $query->get();
+        // Módulo DSS: si hay una ejecución ETL completada, se decide sobre los datos limpios.
+        $this->ejecucionEtl = DssEtlEjecucion::where('estado', 'completado')->latest('id')->first();
+        $this->sinSustento  = [];
 
-        if ($reportes->isEmpty()) return [];
+        if ($this->ejecucionEtl) {
+            $limpios = DssReporteLimpio::where('ejecucion_id', $this->ejecucionEtl->id)
+                ->get()
+                ->keyBy('reporte_id');
 
-        $matrix     = $reportes->map(fn ($r) => $this->buildRow($r, $reportes));
+            // Excluye descartados y fusionados (no están en dss_reportes_limpios)
+            $query->whereIn('id', $limpios->keys());
+
+            // datos_suficientes = false no entra al cálculo para no distorsionar la normalización
+            [$reportes, $insuficientes] = $query->get()
+                ->partition(fn ($r) => $limpios[$r->id]->datos_suficientes);
+
+            $this->sinSustento = $this->construirSinSustento($insuficientes);
+            $reportes = $reportes->values();
+
+            if ($reportes->isEmpty()) return [];
+
+            $matrix = $reportes->map(fn ($r) => $this->buildRowLimpio($r, $limpios[$r->id]));
+        } else {
+            $reportes = $query->get();
+
+            if ($reportes->isEmpty()) return [];
+
+            $matrix = $reportes->map(fn ($r) => $this->buildRow($r, $reportes));
+        }
+
+
         $normalized = $this->vectorNormalize($matrix);
         $weighted   = $this->applyWeights($normalized);
 
@@ -206,6 +235,76 @@ public function escenarioActual(): string
         ];
     }
 
+    // ── Módulo DSS: fuente de datos limpia (ETL) ──────────────────────────────
+
+    private ?DssEtlEjecucion $ejecucionEtl = null;
+    private array $sinSustento = [];
+
+    /** Fila de la matriz a partir de los criterios ya transformados por el ETL. */
+    private function buildRowLimpio(Reporte $r, DssReporteLimpio $l): array
+    {
+        return [
+            'reporte' => $r,
+            'limpio'  => $l,
+            'raw'     => [
+                'severidad'      => (float) $l->severidad,
+                'tipo_via'       => (float) $l->tipo_via,
+                'dias_pendiente' => (float) max($l->dias_pendiente, 1),
+                'densidad_zona'  => (float) max($l->densidad_zona, 1),
+                'score_ia'       => (float) $l->score_ia,
+            ],
+        ];
+    }
+
+    /** Reportes con datos_suficientes = false y el motivo registrado por el ETL. */
+    private function construirSinSustento(Collection $reportes): array
+    {
+        if ($reportes->isEmpty()) return [];
+
+        $motivos = DssEtlAnomalia::where('ejecucion_id', $this->ejecucionEtl->id)
+            ->whereIn('reporte_id', $reportes->pluck('id'))
+            ->where('tipo_anomalia', 'sin_analisis_ia')
+            ->get()
+            ->groupBy('reporte_id');
+
+        return $reportes->map(fn ($r) => [
+            'id'         => $r->id,
+            'folio'      => $r->folio,
+            'nombre_via' => $r->nombre_via,
+            'colonia'    => $r->colonia?->nombre ?? '—',
+            'estado'     => $r->estado,
+            'motivo'     => $motivos->get($r->id)?->pluck('regla_aplicada')->implode(' ')
+                            ?: 'El ETL marcó el reporte con datos insuficientes.',
+        ])->values()->all();
+    }
+
+    public function sinSustento(): array
+    {
+        return $this->sinSustento;
+    }
+
+    /** Origen de los datos del último ranking calculado. */
+    public function fuente(): array
+    {
+        if (!$this->ejecucionEtl) {
+            return [
+                'fuente'           => 'reportes_sin_etl',
+                'ejecucion_etl_id' => null,
+                'ejecucion_etl_at' => null,
+                'aviso_fuente'     => 'No hay una ejecución ETL completada: el ranking usa los reportes sin depurar '
+                                    . '(pueden incluir duplicados, coordenadas inválidas o datos faltantes). '
+                                    . 'Ejecuta el ETL en la pestaña "Calidad de datos".',
+            ];
+        }
+
+        return [
+            'fuente'           => 'dss_reportes_limpios',
+            'ejecucion_etl_id' => $this->ejecucionEtl->id,
+            'ejecucion_etl_at' => $this->ejecucionEtl->finalizado_at?->toIso8601String(),
+            'aviso_fuente'     => null,
+        ];
+    }
+
     // ── TOPSIS steps ─────────────────────────────────────────────────────────
 
     private function vectorNormalize(Collection $matrix): Collection
@@ -275,6 +374,21 @@ public function escenarioActual(): string
             'ai_confianza'  => $r->aiAnalisis?->confianza,
             'ai_prof_cm'    => $r->aiAnalisis?->profundidad_estimada_cm,
             'ai_area_m2'    => $r->aiAnalisis?->area_estimada_m2,
+            // Módulo DSS: datos del ETL y desglose del cálculo para la explicación
+            'num_reportes_fusionados' => ($row['limpio'] ?? null)?->num_reportes_fusionados ?? 1,
+            'explicacion'   => [
+                'criterios' => collect($this->weights)->map(fn ($peso, $k) => [
+                    'crudo'          => round($row['raw'][$k], 4),
+                    'normalizado'    => round($row['normalized'][$k], 4),
+                    'peso'           => $peso,
+                    'ponderado'      => round($row['weighted'][$k], 4),
+                    'ideal_positivo' => round($idealBest[$k], 4),
+                    'ideal_negativo' => round($idealWorst[$k], 4),
+                ])->toArray(),
+                'd_ideal_positivo' => round($dBest, 4),
+                'd_ideal_negativo' => round($dWorst, 4),
+                'score'            => round($score, 4),
+            ],
         ];
     }
 
