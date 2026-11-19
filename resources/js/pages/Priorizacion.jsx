@@ -228,6 +228,263 @@ function TabZonas({ zonas }) {
   )
 }
 
+// ── Comparación de escenarios ─────────────────────────────────────────────────
+
+function construirComparacion(equilibrado = [], rezago = []) {
+  const rezagoPorId = new globalThis.Map(
+    rezago.map(reporte => [reporte.id, reporte])
+  )
+
+  return equilibrado.map(base => {
+    const alternativo = rezagoPorId.get(base.id)
+
+    if (!alternativo) {
+      return {
+        id: base.id,
+        folio: base.folio,
+        nombre_via: base.nombre_via,
+        colonia: base.colonia,
+        rank_equilibrado: base.rank,
+        rank_rezago: null,
+        score_equilibrado: base.topsis_score,
+        score_rezago: null,
+        movimiento: 0,
+        diferencia_score: 0,
+        explicacion: 'No existe información para comparar este reporte.',
+      }
+    }
+
+    const movimiento = base.rank - alternativo.rank
+    const diferenciaScore = Number(
+      (alternativo.topsis_score - base.topsis_score).toFixed(1)
+    )
+
+    let explicacion = 'Conserva la misma posición en los dos escenarios.'
+
+    if (movimiento > 0) {
+      explicacion =
+        `Sube ${movimiento} ${movimiento === 1 ? 'posición' : 'posiciones'} ` +
+        'porque el escenario de rezago da mayor importancia a los días pendientes.'
+    }
+
+    if (movimiento < 0) {
+      const posiciones = Math.abs(movimiento)
+      explicacion =
+        `Baja ${posiciones} ${posiciones === 1 ? 'posición' : 'posiciones'} ` +
+        'al disminuir el peso de la severidad y del tipo de vía.'
+    }
+
+    return {
+      id: base.id,
+      folio: base.folio,
+      nombre_via: base.nombre_via,
+      colonia: base.colonia,
+      rank_equilibrado: base.rank,
+      rank_rezago: alternativo.rank,
+      score_equilibrado: base.topsis_score,
+      score_rezago: alternativo.topsis_score,
+      movimiento,
+      diferencia_score: diferenciaScore,
+      explicacion,
+    }
+  })
+}
+
+function TabComparacion({ comparacion }) {
+  if (!comparacion.length) {
+    return (
+      <div style={{
+        textAlign: 'center',
+        padding: '60px 20px',
+        color: 'var(--text-muted)',
+      }}>
+        <p style={{ fontWeight: 700 }}>
+          No hay reportes disponibles para comparar
+        </p>
+      </div>
+    )
+  }
+
+  return (
+    <div style={{
+      background: 'var(--surface)',
+      border: '1px solid var(--border)',
+      borderRadius: 12,
+      overflow: 'hidden',
+    }}>
+      <div style={{
+        padding: '18px 20px',
+        borderBottom: '1px solid var(--border)',
+      }}>
+        <h3 style={{
+          margin: '0 0 5px',
+          fontSize: 16,
+          fontWeight: 900,
+          color: 'var(--text-primary)',
+        }}>
+          Comparación de escenarios TOPSIS
+        </h3>
+
+        <p style={{
+          margin: 0,
+          fontSize: 12,
+          color: 'var(--text-muted)',
+        }}>
+          Un movimiento positivo indica que el reporte recibe mayor prioridad
+          cuando se busca reducir el rezago.
+        </p>
+      </div>
+
+      <div style={{ overflowX: 'auto' }}>
+        <table style={{
+          width: '100%',
+          minWidth: 920,
+          borderCollapse: 'collapse',
+        }}>
+          <thead>
+            <tr style={{ background: '#F8FAFC' }}>
+              {[
+                'Reporte',
+                'Atención equilibrada',
+                'Reducción del rezago',
+                'Movimiento',
+                'Explicación',
+              ].map(titulo => (
+                <th key={titulo} style={{
+                  padding: '12px 14px',
+                  borderBottom: '1px solid var(--border)',
+                  textAlign: 'left',
+                  fontSize: 10,
+                  fontWeight: 900,
+                  color: 'var(--text-muted)',
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.5px',
+                }}>
+                  {titulo}
+                </th>
+              ))}
+            </tr>
+          </thead>
+
+          <tbody>
+            {comparacion.map(item => {
+              const sube = item.movimiento > 0
+              const baja = item.movimiento < 0
+              const color = sube
+                ? '#276749'
+                : baja
+                  ? '#9D2449'
+                  : '#64748B'
+
+              const simbolo = sube ? '↑' : baja ? '↓' : '→'
+              const movimiento = Math.abs(item.movimiento)
+
+              return (
+                <tr key={item.id}>
+                  <td style={{
+                    padding: '13px 14px',
+                    borderBottom: '1px solid var(--border)',
+                  }}>
+                    <div style={{
+                      fontSize: 11,
+                      fontFamily: 'monospace',
+                      color: 'var(--primary)',
+                      marginBottom: 3,
+                    }}>
+                      {item.folio}
+                    </div>
+
+                    <div style={{
+                      fontSize: 13,
+                      fontWeight: 800,
+                      color: 'var(--text-primary)',
+                    }}>
+                      {item.nombre_via}
+                    </div>
+
+                    <div style={{
+                      fontSize: 11,
+                      color: 'var(--text-muted)',
+                    }}>
+                      {item.colonia}
+                    </div>
+                  </td>
+
+                  <td style={{
+                    padding: '13px 14px',
+                    borderBottom: '1px solid var(--border)',
+                  }}>
+                    <strong>#{item.rank_equilibrado}</strong>
+                    <div style={{
+                      fontSize: 11,
+                      color: 'var(--text-muted)',
+                      marginTop: 3,
+                    }}>
+                      Score: {item.score_equilibrado}
+                    </div>
+                  </td>
+
+                  <td style={{
+                    padding: '13px 14px',
+                    borderBottom: '1px solid var(--border)',
+                  }}>
+                    <strong>#{item.rank_rezago ?? '—'}</strong>
+                    <div style={{
+                      fontSize: 11,
+                      color: 'var(--text-muted)',
+                      marginTop: 3,
+                    }}>
+                      Score: {item.score_rezago ?? '—'}
+                    </div>
+                  </td>
+
+                  <td style={{
+                    padding: '13px 14px',
+                    borderBottom: '1px solid var(--border)',
+                  }}>
+                    <span style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: 5,
+                      padding: '4px 9px',
+                      borderRadius: 99,
+                      background: `${color}15`,
+                      color,
+                      fontSize: 12,
+                      fontWeight: 900,
+                    }}>
+                      {simbolo} {movimiento}
+                    </span>
+
+                    <div style={{
+                      fontSize: 10,
+                      color: 'var(--text-muted)',
+                      marginTop: 5,
+                    }}>
+                      Score {item.diferencia_score > 0 ? '+' : ''}
+                      {item.diferencia_score}
+                    </div>
+                  </td>
+
+                  <td style={{
+                    padding: '13px 14px',
+                    borderBottom: '1px solid var(--border)',
+                    maxWidth: 320,
+                    fontSize: 12,
+                    lineHeight: 1.5,
+                    color: 'var(--text-secondary)',
+                  }}>
+                    {item.explicacion}
+                  </td>
+                </tr>
+              )
+            })}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  )
+}
 // ── Tab: Recomendación IA ─────────────────────────────────────────────────────
 function TabIA({ ranking, zonas }) {
   const [estado,  setEstado]  = useState('idle') // idle | cargando | listo | error
@@ -389,15 +646,27 @@ export default function Priorizacion() {
   const [loading, setLoading] = useState(true)
   const [error,   setError]   = useState(null)
   const [escenario, setEscenario] = useState('equilibrado')
+  const [comparacion, setComparacion] = useState([])
 
   const cargar = async () => {
     setLoading(true)
     setError(null)
     try {
-      const data = await api.get(`/api/analisis/topsis?escenario=${encodeURIComponent(escenario)}`)
+      const [equilibradoData, rezagoData] = await Promise.all([
+        api.get('/api/analisis/topsis?escenario=equilibrado'),
+        api.get('/api/analisis/topsis?escenario=rezago'),
+      ])
+
+      const data = escenario === 'rezago'
+        ? rezagoData
+        : equilibradoData
       setRanking(data.ranking ?? [])
       setZonas(data.zonas ?? [])
       setMeta(data.meta ?? null)
+      setComparacion(construirComparacion(
+        equilibradoData.ranking ?? [],
+        rezagoData.ranking ?? []
+      ))
     } catch (e) {
       setError(e.message || 'Error al cargar el análisis')
     } finally {
@@ -415,6 +684,7 @@ export default function Priorizacion() {
 
   const TABS = [
     { id:'ranking', label:'Ranking TOPSIS', icon:<BarChart2 size={15}/> },
+    { id:'comparacion', label:'Comparar escenarios', icon:<BarChart2 size={15}/> },
     { id:'zonas',   label:'Por Zonas',      icon:<Map size={15}/> },
     { id:'ia',      label:'Recomendación IA', icon:<Brain size={15}/> },
   ]
@@ -561,6 +831,7 @@ export default function Priorizacion() {
           )}
 
           {!loading && !error && tab === 'ranking' && <TabRanking ranking={ranking} onAsignar={r => window.location.href = `/reportes/${r.id}`} />}
+          {!loading && !error && tab === 'comparacion' && <TabComparacion comparacion={comparacion} />}
           {!loading && !error && tab === 'zonas'   && <TabZonas zonas={zonas} />}
           {!loading && !error && tab === 'ia'       && <TabIA key={escenario} ranking={ranking} zonas={zonas} />}
         </main>
