@@ -7,6 +7,8 @@ import TabCalidadDatos from '../components/dss/TabCalidadDatos'
 import ResumenPresupuesto, { dinero } from '../components/dss/ResumenPresupuesto'
 import PanelExplicacion from '../components/dss/PanelExplicacion'
 import SinSustento from '../components/dss/SinSustento'
+import IndicadoresPanel from '../components/dss/IndicadoresPanel'
+import AvisoEtl from '../components/dss/AvisoEtl'
 import { api } from '../lib/api'
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -696,6 +698,7 @@ export default function Priorizacion() {
   const [presupuesto, setPresupuesto] = useState('')
   const [presupuestoAplicado, setPresupuestoAplicado] = useState('')
   const [sinSustento, setSinSustento] = useState([])
+  const [indicadores, setIndicadores] = useState([])
   const [filaExplicada, setFilaExplicada] = useState(null)
 
   const recalcularPresupuesto = () => {
@@ -749,6 +752,7 @@ export default function Priorizacion() {
       setZonas(data.zonas ?? [])
       setMeta(data.meta ?? null)
       setSinSustento(data.sin_sustento ?? [])
+      setIndicadores(data.indicadores ?? [])
       // Prellenar con el disponible del mes la primera vez
       if (presupuestoAplicado === '' && data.meta?.presupuesto_origen === 'presupuestos_mes') {
         setPresupuesto(String(data.meta.presupuesto))
@@ -1185,6 +1189,8 @@ export default function Priorizacion() {
             </div>
           )}
 
+          {tab === 'ranking' && !error && <AvisoEtl meta={meta} onEjecutado={cargar} />}
+          {tab === 'ranking' && !error && !loading && <IndicadoresPanel indicadores={indicadores} />}
           {tab === 'ranking' && !error && (
             <ResumenPresupuesto
               meta={meta}
