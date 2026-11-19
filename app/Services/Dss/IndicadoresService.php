@@ -147,31 +147,63 @@ class IndicadoresService
     private function concentracionColonias(array $ranking): array
     {
         $total = count($ranking);
-        $conteo = collect($ranking)->countBy(fn ($f) => in_array($f['colonia'] ?? null, [null, '', '—'], true) ? 'Sin colonia' : $f['colonia'])
+
+        // Colonia resuelta por el ETL (incluye imputaciones); sin ETL, la del reporte.
+        $colonia = function (array $f): ?string {
+            $nombre = array_key_exists('colonia_dss', $f) ? $f['colonia_dss'] : ($f['colonia'] ?? null);
+
+            return in_array($nombre, [null, '', '—'], true) ? null : $nombre;
+        };
+
+        $sinColonia = count(array_filter($ranking, fn ($f) => $colonia($f) === null));
+
+        // "Sin colonia" no compite en el top: se reporta aparte
+        $conteo = collect($ranking)
+            ->map($colonia)
+            ->filter()
+            ->countBy()
             ->sortDesc()
             ->take(self::TOP_COLONIAS);
 
-        $detalle = $conteo->map(fn ($n, $colonia) => [
-            'colonia' => $colonia,
+        $detalle = $conteo->map(fn ($n, $nombre) => [
+            'colonia' => $nombre,
             'pendientes' => $n,
             'porcentaje' => $this->porcentaje($n, $total),
         ])->values()->all();
 
         $valor = $this->porcentaje($conteo->sum(), $total);
         $primera = $detalle[0] ?? null;
+        $pctSinColonia = $this->porcentaje($sinColonia, $total);
+
+        $interpretacion = match (true) {
+            $total === 0 => 'No hay baches pendientes en la selección.',
+            $primera === null => 'Ningún bache pendiente tiene colonia asignada.',
+            default => "{$primera['colonia']} concentra el {$this->num($primera['porcentaje'])} % de los pendientes; "
+                .'las '.count($detalle)." colonias principales suman el {$this->num($valor)} %.",
+        };
+
+        if ($sinColonia > 0) {
+            $interpretacion .= ' '.($sinColonia === 1 ? '1 reporte' : "{$sinColonia} reportes")
+                ." sin colonia asignada ({$this->num($pctSinColonia)} %).";
+        }
 
         return $this->indicador(
             'concentracion_colonias',
             'Concentración por colonia',
             $valor,
             '%',
-            'pendientes de las '.self::TOP_COLONIAS.' colonias con más baches / total de baches rankeados × 100',
-            'Colonia del reporte (colonias.nombre, vía reportes.colonia_id)',
-            $primera === null
-                ? 'No hay baches pendientes en la selección.'
-                : "{$primera['colonia']} concentra el {$this->num($primera['porcentaje'])} % de los pendientes; "
-                    .'las '.count($detalle)." colonias principales suman el {$this->num($valor)} %.",
-            ['top' => $detalle]
+            'pendientes de las '.self::TOP_COLONIAS.' colonias con más baches / total de baches rankeados × 100 '
+                .'("Sin colonia" se excluye del top y se reporta aparte sobre el mismo total)',
+            'Colonia de dss_reportes_limpios.colonia_id, incluidas las imputadas por el ETL (sin ETL: reportes.colonia_id)',
+            $interpretacion,
+            [
+                'top' => $detalle,
+                'sin_colonia' => [
+                    'pendientes' => $sinColonia,
+                    'porcentaje' => $pctSinColonia,
+                    'texto' => $sinColonia === 1 ? '1 reporte sin colonia asignada' : "{$sinColonia} reportes sin colonia asignada",
+                ],
+            ]
         );
     }
 

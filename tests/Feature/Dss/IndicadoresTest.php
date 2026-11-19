@@ -84,10 +84,14 @@ class IndicadoresTest extends TestCase
         return $id;
     }
 
-    private function crearLimpio(string $colonia, int $dias, ?float $area, bool $suficiente = true): void
+    /**
+     * $colonia = null → sin colonia; $imputada = true → el reporte no tiene colonia
+     * pero el ETL le imputó $colonia en dss_reportes_limpios.
+     */
+    private function crearLimpio(?string $colonia, int $dias, ?float $area, bool $suficiente = true, bool $imputada = false): void
     {
-        $coloniaId = $this->colonia($colonia);
-        $id = $this->crearReporte(['colonia_id' => $coloniaId], $area);
+        $coloniaId = $colonia === null ? null : $this->colonia($colonia);
+        $id = $this->crearReporte(['colonia_id' => $imputada ? null : $coloniaId], $area);
 
         DB::table('dss_reportes_limpios')->insert([
             'ejecucion_id' => $this->ejecucionId, 'reporte_id' => $id,
@@ -241,6 +245,37 @@ class IndicadoresTest extends TestCase
         $this->assertEqualsWithDelta(28.6, $top[0]['porcentaje'], 0.001);   // 2 / 7
         $this->assertEqualsWithDelta(85.7, $c['valor'], 0.001);             // 6 / 7
         $this->assertStringStartsWith('Centro concentra el 28.6 %', $c['interpretacion']);
+    }
+
+    public function test_sin_colonia_se_excluye_del_top_y_se_reporta_aparte(): void
+    {
+        $this->crearDatosConocidos();          // 7 baches con colonia
+        $this->crearLimpio(null, 12, 0.5);     // + 2 sin colonia = 9 rankeados
+        $this->crearLimpio(null, 18, 0.5);
+
+        $c = $this->calcular(3000)['indicadores']['concentracion_colonias'];
+
+        $this->assertNotContains('Sin colonia', array_column($c['detalle']['top'], 'colonia'));
+        $this->assertSame('Centro', $c['detalle']['top'][0]['colonia']);
+        $this->assertEqualsWithDelta(22.2, $c['detalle']['top'][0]['porcentaje'], 0.001);   // 2 / 9
+        $this->assertEqualsWithDelta(66.7, $c['valor'], 0.001);                              // 6 / 9
+        $this->assertSame(2, $c['detalle']['sin_colonia']['pendientes']);
+        $this->assertEqualsWithDelta(22.2, $c['detalle']['sin_colonia']['porcentaje'], 0.001);
+        $this->assertSame('2 reportes sin colonia asignada', $c['detalle']['sin_colonia']['texto']);
+        $this->assertStringEndsWith('2 reportes sin colonia asignada (22.2 %).', $c['interpretacion']);
+    }
+
+    public function test_concentracion_usa_la_colonia_imputada_por_el_etl(): void
+    {
+        $this->crearDatosConocidos();
+        // El reporte no tiene colonia; el ETL le imputó "Reforma"
+        $this->crearLimpio('Reforma', 12, 0.5, true, true);
+
+        $c = $this->calcular(3000)['indicadores']['concentracion_colonias'];
+        $top = collect($c['detalle']['top'])->keyBy('colonia');
+
+        $this->assertSame(2, $top['Reforma']['pendientes']);
+        $this->assertSame(0, $c['detalle']['sin_colonia']['pendientes']);
     }
 
     public function test_tasa_de_calidad_de_la_ejecucion_usada(): void
