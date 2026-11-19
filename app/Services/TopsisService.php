@@ -81,14 +81,18 @@ public function escenarioActual(): string
 
     // ── API pública ───────────────────────────────────────────────────────────
 
-    public function rankear(): array
+    public function rankear(array $filtros = []): array
     {
-        $reportes = Reporte::with([
+        $query = Reporte::with([
             'aiAnalisis',
             'colonia:id,nombre',
             'municipio:id,nombre',
             'fotos',
-        ])->whereIn('estado', $this->estadosActivos)->get();
+        ])->whereIn('estado', $this->estadosActivos);
+
+        $this->aplicarFiltros($query, $filtros);
+
+        $reportes = $query->get();
 
         if ($reportes->isEmpty()) return [];
 
@@ -106,11 +110,14 @@ public function escenarioActual(): string
             ->toArray();
     }
 
-    public function resumenZonas(): array
+    public function resumenZonas(array $filtros = []): array
     {
-        $reportes = Reporte::with(['colonia:id,nombre', 'aiAnalisis'])
-            ->whereIn('estado', $this->estadosActivos)
-            ->get();
+        $query = Reporte::with(['colonia:id,nombre', 'aiAnalisis'])
+            ->whereIn('estado', $this->estadosActivos);
+
+        $this->aplicarFiltros($query, $filtros);
+
+        $reportes = $query->get();
 
         return $reportes
             ->groupBy('colonia_id')
@@ -120,6 +127,61 @@ public function escenarioActual(): string
             ->toArray();
     }
 
+    // ── Filtros para el análisis ──────────────────────────────────────────────
+
+    private function aplicarFiltros($query, array $filtros): void
+    {
+        if (!empty($filtros['colonia_id'])) {
+            $query->where('colonia_id', (int) $filtros['colonia_id']);
+        }
+
+        if (!empty($filtros['colonia'])) {
+            $nombreColonia = trim($filtros['colonia']);
+
+            $query->whereHas('colonia', function ($subquery) use ($nombreColonia) {
+                $subquery->where('nombre', 'like', "%{$nombreColonia}%");
+            });
+        }
+
+        if (!empty($filtros['estado'])) {
+            $query->where('estado', $filtros['estado']);
+        }
+
+        if (!empty($filtros['severidad'])) {
+            $query->whereHas('aiAnalisis', function ($subquery) use ($filtros) {
+                $subquery->where(
+                    'severidad_ia',
+                    $filtros['severidad']
+                );
+            });
+        }
+
+        if (
+            isset($filtros['dias_min'])
+            && $filtros['dias_min'] !== ''
+            && (int) $filtros['dias_min'] > 0
+        ) {
+            $query->where(
+                'fecha_reporte',
+                '<=',
+                now()->subDays((int) $filtros['dias_min'])
+            );
+        }
+
+        if (!empty($filtros['buscar'])) {
+            $buscar = trim($filtros['buscar']);
+
+            $query->where(function ($subquery) use ($buscar) {
+                $subquery
+                    ->where('folio', 'like', "%{$buscar}%")
+                    ->orWhere('nombre_via', 'like', "%{$buscar}%")
+                    ->orWhere('direccion_aproximada', 'like', "%{$buscar}%")
+                    ->orWhereHas('colonia', function ($colonia) use ($buscar) {
+                        $colonia->where('nombre', 'like', "%{$buscar}%");
+                    });
+            });
+        }
+    }
     // ── Construcción de la matriz ─────────────────────────────────────────────
 
     private function buildRow(Reporte $r, Collection $todos): array

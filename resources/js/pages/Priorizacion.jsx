@@ -647,14 +647,51 @@ export default function Priorizacion() {
   const [error,   setError]   = useState(null)
   const [escenario, setEscenario] = useState('equilibrado')
   const [comparacion, setComparacion] = useState([])
+  const [coloniasDisponibles, setColoniasDisponibles] = useState([])
+  const [filtros, setFiltros] = useState({
+    buscar: '',
+    colonia: '',
+    estado: '',
+    severidad: '',
+    dias_min: '',
+  })
+  const [filtrosAplicados, setFiltrosAplicados] = useState({})
+
+  const aplicarFiltros = () => {
+    setFiltrosAplicados({ ...filtros })
+  }
+
+  const limpiarFiltros = () => {
+    const vacios = {
+      buscar: '',
+      colonia: '',
+      estado: '',
+      severidad: '',
+      dias_min: '',
+    }
+
+    setFiltros(vacios)
+    setFiltrosAplicados({})
+  }
 
   const cargar = async () => {
     setLoading(true)
     setError(null)
     try {
+      const parametros = new URLSearchParams()
+
+      Object.entries(filtrosAplicados).forEach(([clave, valor]) => {
+        if (valor !== '' && valor !== null && valor !== undefined) {
+          parametros.set(clave, valor)
+        }
+      })
+
+      const filtrosQuery = parametros.toString()
+      const sufijo = filtrosQuery ? `&${filtrosQuery}` : ''
+
       const [equilibradoData, rezagoData] = await Promise.all([
-        api.get('/api/analisis/topsis?escenario=equilibrado'),
-        api.get('/api/analisis/topsis?escenario=rezago'),
+        api.get(`/api/analisis/topsis?escenario=equilibrado${sufijo}`),
+        api.get(`/api/analisis/topsis?escenario=rezago${sufijo}`),
       ])
 
       const data = escenario === 'rezago'
@@ -674,7 +711,7 @@ export default function Priorizacion() {
     }
   }
 
-  useEffect(() => { cargar() }, [escenario])
+  useEffect(() => { cargar() }, [escenario, filtrosAplicados])
 
   const totalCriticos = ranking.filter(r => r.topsis_score >= 70).length
   const scorePromedio = ranking.length
@@ -772,6 +809,267 @@ export default function Priorizacion() {
             </div>
           </div>
 
+          {/* Filtros del análisis */}
+          <div style={{
+            background: 'var(--surface)',
+            border: '1px solid var(--border)',
+            borderRadius: 12,
+            padding: 18,
+            marginBottom: 24,
+          }}>
+            <div style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              gap: 12,
+              marginBottom: 14,
+            }}>
+              <div>
+                <h3 style={{
+                  margin: '0 0 3px',
+                  fontSize: 14,
+                  fontWeight: 900,
+                  color: 'var(--text-primary)',
+                }}>
+                  Filtros del análisis
+                </h3>
+
+                <p style={{
+                  margin: 0,
+                  fontSize: 11,
+                  color: 'var(--text-muted)',
+                }}>
+                  Los filtros se aplican antes de calcular y normalizar TOPSIS.
+                </p>
+              </div>
+
+              {Object.values(filtrosAplicados).some(valor => valor !== '') && (
+                <span style={{
+                  padding: '3px 9px',
+                  borderRadius: 99,
+                  background: 'var(--primary-light)',
+                  color: 'var(--primary)',
+                  fontSize: 10,
+                  fontWeight: 900,
+                }}>
+                  FILTROS ACTIVOS
+                </span>
+              )}
+            </div>
+
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))',
+              gap: 12,
+            }}>
+              <label style={{
+                display: 'flex',
+                flexDirection: 'column',
+                gap: 5,
+                fontSize: 10,
+                fontWeight: 800,
+                color: 'var(--text-muted)',
+                textTransform: 'uppercase',
+              }}>
+                Folio, calle o dirección
+
+                <input
+                  type="text"
+                  value={filtros.buscar}
+                  onChange={e => setFiltros({
+                    ...filtros,
+                    buscar: e.target.value,
+                  })}
+                  onKeyDown={e => {
+                    if (e.key === 'Enter') aplicarFiltros()
+                  }}
+                  placeholder="Ej. Avenida"
+                  style={{
+                    padding: '9px 10px',
+                    border: '1px solid var(--border)',
+                    borderRadius: 8,
+                    background: 'var(--surface)',
+                    color: 'var(--text-primary)',
+                  }}
+                />
+              </label>
+
+              <label style={{
+                display: 'flex',
+                flexDirection: 'column',
+                gap: 5,
+                fontSize: 10,
+                fontWeight: 800,
+                color: 'var(--text-muted)',
+                textTransform: 'uppercase',
+              }}>
+                Colonia
+
+                <select
+                  value={filtros.colonia}
+                  onChange={e => setFiltros({
+                    ...filtros,
+                    colonia: e.target.value,
+                  })}
+                  style={{
+                    padding: '9px 10px',
+                    border: '1px solid var(--border)',
+                    borderRadius: 8,
+                    background: 'var(--surface)',
+                    color: 'var(--text-primary)',
+                  }}
+                >
+                  <option value="">Todas</option>
+
+                  {coloniasDisponibles.map(colonia => (
+                    <option key={colonia} value={colonia}>
+                      {colonia}
+                    </option>
+                  ))}
+                </select>
+              </label>
+
+              <label style={{
+                display: 'flex',
+                flexDirection: 'column',
+                gap: 5,
+                fontSize: 10,
+                fontWeight: 800,
+                color: 'var(--text-muted)',
+                textTransform: 'uppercase',
+              }}>
+                Estado
+
+                <select
+                  value={filtros.estado}
+                  onChange={e => setFiltros({
+                    ...filtros,
+                    estado: e.target.value,
+                  })}
+                  style={{
+                    padding: '9px 10px',
+                    border: '1px solid var(--border)',
+                    borderRadius: 8,
+                    background: 'var(--surface)',
+                    color: 'var(--text-primary)',
+                  }}
+                >
+                  <option value="">Todos</option>
+                  <option value="pendiente">Pendiente</option>
+                  <option value="validado">Validado</option>
+                  <option value="asignado">Asignado</option>
+                  <option value="en_proceso">En proceso</option>
+                </select>
+              </label>
+
+              <label style={{
+                display: 'flex',
+                flexDirection: 'column',
+                gap: 5,
+                fontSize: 10,
+                fontWeight: 800,
+                color: 'var(--text-muted)',
+                textTransform: 'uppercase',
+              }}>
+                Severidad
+
+                <select
+                  value={filtros.severidad}
+                  onChange={e => setFiltros({
+                    ...filtros,
+                    severidad: e.target.value,
+                  })}
+                  style={{
+                    padding: '9px 10px',
+                    border: '1px solid var(--border)',
+                    borderRadius: 8,
+                    background: 'var(--surface)',
+                    color: 'var(--text-primary)',
+                  }}
+                >
+                  <option value="">Todas</option>
+                  <option value="alta">Alta</option>
+                  <option value="media">Media</option>
+                  <option value="baja">Baja</option>
+                </select>
+              </label>
+
+              <label style={{
+                display: 'flex',
+                flexDirection: 'column',
+                gap: 5,
+                fontSize: 10,
+                fontWeight: 800,
+                color: 'var(--text-muted)',
+                textTransform: 'uppercase',
+              }}>
+                Días mínimos pendientes
+
+                <input
+                  type="number"
+                  min="0"
+                  max="3650"
+                  value={filtros.dias_min}
+                  onChange={e => setFiltros({
+                    ...filtros,
+                    dias_min: e.target.value,
+                  })}
+                  placeholder="Ej. 30"
+                  style={{
+                    padding: '9px 10px',
+                    border: '1px solid var(--border)',
+                    borderRadius: 8,
+                    background: 'var(--surface)',
+                    color: 'var(--text-primary)',
+                  }}
+                />
+              </label>
+            </div>
+
+            <div style={{
+              display: 'flex',
+              justifyContent: 'flex-end',
+              gap: 8,
+              marginTop: 14,
+              flexWrap: 'wrap',
+            }}>
+              <button
+                type="button"
+                onClick={limpiarFiltros}
+                disabled={loading}
+                style={{
+                  padding: '9px 16px',
+                  border: '1px solid var(--border)',
+                  borderRadius: 8,
+                  background: 'transparent',
+                  color: 'var(--text-secondary)',
+                  fontSize: 11,
+                  fontWeight: 800,
+                  cursor: loading ? 'wait' : 'pointer',
+                }}
+              >
+                Limpiar
+              </button>
+
+              <button
+                type="button"
+                onClick={aplicarFiltros}
+                disabled={loading}
+                style={{
+                  padding: '9px 18px',
+                  border: 'none',
+                  borderRadius: 8,
+                  background: 'var(--primary)',
+                  color: 'white',
+                  fontSize: 11,
+                  fontWeight: 800,
+                  cursor: loading ? 'wait' : 'pointer',
+                }}
+              >
+                Aplicar filtros
+              </button>
+            </div>
+          </div>
           {/* KPIs */}
           {!loading && !error && (
             <div className="grid-4" style={{ marginBottom: 28 }}>
