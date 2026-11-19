@@ -105,12 +105,13 @@ construye sobre el sistema existente sin modificar la tabla `reportes`.
 | Costo estimado, selección por presupuesto y explicación por bache | `app/Services/Dss/RecomendacionService.php` |
 | Parámetros de costo (supuestos) en `dss_parametros` | `app/Models/DssParametro.php`, `database/seeders/DssParametrosSeeder.php` |
 | Presupuesto, decisión, "¿Por qué?" y "Sin sustento" en la pestaña Ranking | `resources/js/components/dss/{ResumenPresupuesto,PanelExplicacion,SinSustento}.jsx` |
-| Documentación | [`docs/dss/modelo.md`](docs/dss/modelo.md), [`docs/dss/diccionario-datos.md`](docs/dss/diccionario-datos.md), [`docs/dss/etl.md`](docs/dss/etl.md) |
+| Indicadores de decisión (backlog, cobertura, baches cubiertos, concentración, calidad) y aviso de ETL desactualizado | `app/Services/Dss/IndicadoresService.php`, `resources/js/components/dss/{IndicadoresPanel,AvisoEtl}.jsx` |
+| Documentación | [`docs/dss/modelo.md`](docs/dss/modelo.md), [`docs/dss/indicadores.md`](docs/dss/indicadores.md), [`docs/dss/diccionario-datos.md`](docs/dss/diccionario-datos.md), [`docs/dss/etl.md`](docs/dss/etl.md) |
 
 Cambios en código existente:
 - `ReporteController::OAXACA_BOUNDS` pasó de `private` a `public` para reutilizar los mismos límites geográficos en el ETL.
 - `TopsisService`: corrección del cálculo de días pendientes con Carbon 3 y nueva fuente de datos limpia. Los pesos y la fórmula TOPSIS no cambiaron.
-- `GET /api/analisis/topsis`: acepta `presupuesto` y agrega campos (`costo_estimado`, `decision`, `explicacion`, `sin_sustento`, `meta.fuente`…) sin quitar ni renombrar los existentes.
+- `GET /api/analisis/topsis`: acepta `presupuesto` y agrega campos (`costo_estimado`, `decision`, `explicacion`, `sin_sustento`, `indicadores`, `meta.fuente`, `meta.etl_desactualizado`…) sin quitar ni renombrar los existentes.
 
 ```bash
 php artisan migrate
