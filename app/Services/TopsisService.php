@@ -186,7 +186,7 @@ public function escenarioActual(): string
 
     private function buildRow(Reporte $r, Collection $todos): array
     {
-        $dias = (int) now()->diffInDays($r->fecha_reporte ?? now());
+        $dias = (int) ($r->fecha_reporte ?? now())->diffInDays(now());
 
         $densidad = $todos->filter(function ($other) use ($r) {
             return $other->id !== $r->id
