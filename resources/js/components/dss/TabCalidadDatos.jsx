@@ -144,7 +144,7 @@ export default function TabCalidadDatos() {
   const colorTasa = tasa === null ? 'var(--text-muted)' : tasa >= 85 ? '#276749' : tasa >= 60 ? '#B7791F' : '#9D2449'
 
   return (
-    <div style={{ display:'flex', flexDirection:'column', gap:20 }}>
+    <div style={{ display:'flex', flexDirection:'column', gap:20, minWidth:0, maxWidth:'100%' }}>
       <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
 
       {/* Encabezado */}
@@ -223,8 +223,8 @@ export default function TabCalidadDatos() {
         </div>
       </div>
 
-      {/* Tabla de anomalías */}
-      <div style={{ background:'var(--surface)', border:'1px solid var(--border)', borderRadius:12, padding:18 }}>
+      {/* Tabla de anomalías: la tarjeta nunca se desborda; la tabla tiene su propio scroll horizontal */}
+      <div style={{ background:'var(--surface)', border:'1px solid var(--border)', borderRadius:12, padding:18, minWidth:0, maxWidth:'100%', overflow:'hidden' }}>
         <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-end', gap:12, flexWrap:'wrap', marginBottom:14 }}>
           <h3 style={{ margin:0, fontSize:13, fontWeight:900, color:'var(--text-primary)' }}>
             Detalle de anomalías {paginacion ? `(${paginacion.total})` : ''}
@@ -253,8 +253,8 @@ export default function TabCalidadDatos() {
             {filtroTipo || filtroSev ? 'No hay anomalías con esos filtros' : '✅ Esta ejecución no registró anomalías'}
           </p>
         ) : (
-          <div style={{ overflowX:'auto', opacity: cargandoTabla ? 0.5 : 1 }}>
-            <table style={{ width:'100%', borderCollapse:'collapse', fontSize:12 }}>
+          <div style={{ width:'100%', maxWidth:'100%', overflowX:'auto', WebkitOverflowScrolling:'touch', opacity: cargandoTabla ? 0.5 : 1 }}>
+            <table style={{ width:'100%', minWidth:860, borderCollapse:'collapse', fontSize:12 }}>
               <thead>
                 <tr>
                   {['Folio', 'Tipo', 'Campo', 'Valor original', 'Acción', 'Regla aplicada'].map(h => (
@@ -274,14 +274,14 @@ export default function TabCalidadDatos() {
                         {a.folio ?? '—'}
                       </td>
                       <td style={{ padding:'10px', color:'var(--text-secondary)', whiteSpace:'nowrap' }}>{TIPO_LABEL[a.tipo_anomalia] ?? a.tipo_anomalia}</td>
-                      <td style={{ padding:'10px', color:'var(--text-muted)', fontFamily:'monospace', fontSize:11 }}>{a.campo ?? '—'}</td>
-                      <td style={{ padding:'10px', color:'var(--text-secondary)', fontFamily:'monospace', fontSize:11 }}>{a.valor_original ?? <em>nulo</em>}</td>
+                      <td style={{ padding:'10px', color:'var(--text-muted)', fontFamily:'monospace', fontSize:11, maxWidth:160, overflowWrap:'anywhere' }}>{a.campo ?? '—'}</td>
+                      <td style={{ padding:'10px', color:'var(--text-secondary)', fontFamily:'monospace', fontSize:11, maxWidth:200, overflowWrap:'anywhere' }}>{a.valor_original ?? <em>nulo</em>}</td>
                       <td style={{ padding:'10px' }}>
                         <span style={{ padding:'2px 8px', borderRadius:99, fontSize:10, fontWeight:900, background:accion.bg, color:accion.color, whiteSpace:'nowrap' }}>
                           {accion.label ?? a.accion_tomada}
                         </span>
                       </td>
-                      <td style={{ padding:'10px', color:'var(--text-secondary)', minWidth:260 }}>{a.regla_aplicada}</td>
+                      <td style={{ padding:'10px', color:'var(--text-secondary)', minWidth:280, whiteSpace:'normal', overflowWrap:'anywhere', lineHeight:1.45 }}>{a.regla_aplicada}</td>
                     </tr>
                   )
                 })}
