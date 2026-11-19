@@ -28,7 +28,9 @@ export default function ProtectedRoute({ children, requiredRole }) {
     return <Navigate to="/login" state={{ from: location }} replace />
   }
 
-  if (requiredRole && !user.roles?.includes(requiredRole)) {
+  // requiredRole acepta un rol ('autoridad') o una lista de roles permitidos (['supervisor', 'autoridad'])
+  const rolesPermitidos = requiredRole ? [].concat(requiredRole) : []
+  if (rolesPermitidos.length && !rolesPermitidos.some(r => user.roles?.includes(r))) {
     return <Navigate to="/sin-permiso" replace />
   }
 

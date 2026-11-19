@@ -29,6 +29,8 @@ class DatabaseSeeder extends Seeder
             PresupuestoSeeder::class,
             // Datos de demostración (baches, fotos, IA, historial, asignaciones)
             DemoDataSeeder::class,
+            // Módulo DSS: parámetros de costo (supuestos)
+            DssParametrosSeeder::class,
         ]);
     }
 }

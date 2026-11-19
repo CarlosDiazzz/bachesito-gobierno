@@ -1,8 +1,14 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Brain, AlertTriangle, MapPin, Clock, Zap, RefreshCw, ChevronRight, BarChart2, Map } from 'lucide-react'
+import { Brain, AlertTriangle, MapPin, Clock, Zap, RefreshCw, ChevronRight, BarChart2, Map, Database } from 'lucide-react'
 import Sidebar from '../components/Sidebar'
 import TopBar from '../components/TopBar'
+import TabCalidadDatos from '../components/dss/TabCalidadDatos'
+import ResumenPresupuesto, { dinero } from '../components/dss/ResumenPresupuesto'
+import PanelExplicacion from '../components/dss/PanelExplicacion'
+import SinSustento from '../components/dss/SinSustento'
+import IndicadoresPanel from '../components/dss/IndicadoresPanel'
+import AvisoEtl from '../components/dss/AvisoEtl'
 import { api } from '../lib/api'
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -12,6 +18,10 @@ const ESTADO_COLOR = { pendiente:'#B7791F', validado:'#2B6CB0', asignado:'#6B46C
 const PRIO_COLOR   = { critica:'#9D2449', alta:'#C05621', media:'#B7791F', baja:'#276749' }
 const SEV_COLOR    = { alta:'#9D2449', media:'#B7791F', baja:'#276749' }
 const SEV_EMOJI    = { alta:'🔴', media:'🟡', baja:'🟢' }
+const DECISION_CFG = {
+  recomendado: { label:'Recomendado', bg:'#DCFCE7', color:'#166534' },
+  en_espera:   { label:'En espera',   bg:'#F1F5F9', color:'#475569' },
+}
 
 const URG_CFG = {
   inmediata: { label:'Inmediata', bg:'#FEE2E2', color:'#991B1B' },
@@ -51,7 +61,7 @@ function CriterioBar({ label, val, max, color='var(--primary)' }) {
 }
 
 // ── Tab: Ranking TOPSIS ───────────────────────────────────────────────────────
-function TabRanking({ ranking, onAsignar }) {
+function TabRanking({ ranking, onAsignar, onExplicar }) {
   const navigate = useNavigate()
 
   if (!ranking.length) return (
@@ -99,11 +109,29 @@ function TabRanking({ ranking, onAsignar }) {
                         {SEV_EMOJI[r.ai_severidad]} {r.ai_severidad}
                       </span>
                     )}
+                    {DECISION_CFG[r.decision] && (
+                      <span style={{ fontSize:10, fontWeight:900, textTransform:'uppercase', letterSpacing:'0.4px',
+                        color:DECISION_CFG[r.decision].color, background:DECISION_CFG[r.decision].bg, padding:'2px 8px', borderRadius:99 }}>
+                        {DECISION_CFG[r.decision].label}
+                      </span>
+                    )}
+                    {r.num_reportes_fusionados > 1 && (
+                      <span style={{ fontSize:10, fontWeight:700, color:'#3730A3', background:'#E0E7FF', padding:'1px 7px', borderRadius:99 }}>
+                        ×{r.num_reportes_fusionados} reportes
+                      </span>
+                    )}
                   </div>
                   <p style={{ fontSize:14, fontWeight:800, color:'var(--text-primary)', margin:'0 0 2px', whiteSpace:'nowrap', overflow:'hidden', textOverflow:'ellipsis' }}>
                     {r.nombre_via}
                   </p>
-                  <p style={{ fontSize:11, color:'var(--text-muted)', margin:0 }}>{r.colonia}</p>
+                  <p style={{ fontSize:11, color:'var(--text-muted)', margin:0 }}>
+                    {r.colonia_dss ?? r.colonia}
+                    {r.colonia_imputada && r.colonia_dss && (
+                      <span title="Colonia imputada por el ETL (el reporte no la tenía)" style={{ marginLeft:6, fontSize:9, fontWeight:800, color:'#92400E', background:'#FEF3C7', padding:'1px 6px', borderRadius:99 }}>
+                        IMPUTADA
+                      </span>
+                    )}
+                  </p>
                 </div>
 
                 {/* TOPSIS score */}
@@ -117,6 +145,14 @@ function TabRanking({ ranking, onAsignar }) {
                     <span style={{ fontSize:16, fontWeight:900, color: r.topsis_score >= 70 ? '#9D2449' : r.topsis_score >= 45 ? '#C05621' : '#276749', lineHeight:1 }}>{r.topsis_score}</span>
                     <span style={{ fontSize:8, fontWeight:700, color:'var(--text-muted)', textTransform:'uppercase' }}>TOPSIS</span>
                   </div>
+                  {r.costo_estimado !== undefined && (
+                    <div style={{ marginTop:4 }}>
+                      <div style={{ fontSize:13, fontWeight:900, color:'var(--text-primary)' }}>{dinero(r.costo_estimado)}</div>
+                      <div style={{ fontSize:8, fontWeight:700, color:'var(--text-muted)', textTransform:'uppercase' }}>
+                        Costo{r.costo_detalle?.area_supuesta ? ' *' : ''}
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -146,6 +182,15 @@ function TabRanking({ ranking, onAsignar }) {
                 >
                   Ver detalle
                 </button>
+                {r.explicacion && onExplicar && (
+                  <button
+                    onClick={() => onExplicar(r)}
+                    style={{ fontSize:11, fontWeight:700, padding:'5px 12px', borderRadius:6,
+                      border:'1px solid var(--primary)', background:'var(--primary-light)', cursor:'pointer', color:'var(--primary)' }}
+                  >
+                    ¿Por qué?
+                  </button>
+                )}
                 {(r.estado === 'validado') && (
                   <button
                     onClick={() => onAsignar(r)}
@@ -656,6 +701,23 @@ export default function Priorizacion() {
     dias_min: '',
   })
   const [filtrosAplicados, setFiltrosAplicados] = useState({})
+  // Módulo DSS: presupuesto, reportes sin sustento y panel de explicación
+  const [presupuesto, setPresupuesto] = useState('')
+  const [presupuestoAplicado, setPresupuestoAplicado] = useState('')
+  const [sinSustento, setSinSustento] = useState([])
+  const [indicadores, setIndicadores] = useState([])
+  const [filaExplicada, setFilaExplicada] = useState(null)
+
+  // Al recalcular, el ranking se desmonta mientras carga y la página se acorta;
+  // al terminar se regresa a la sección de recomendación en lugar de quedar arriba.
+  const seccionPresupuestoRef = useRef(null)
+  const volverAPresupuesto = useRef(false)
+
+  const recalcularPresupuesto = () => {
+    volverAPresupuesto.current = true
+    if (presupuesto === presupuestoAplicado) cargar()
+    else setPresupuestoAplicado(presupuesto)
+  }
 
   const aplicarFiltros = () => {
     setFiltrosAplicados({ ...filtros })
@@ -686,6 +748,8 @@ export default function Priorizacion() {
         }
       })
 
+      if (presupuestoAplicado !== '') parametros.set('presupuesto', presupuestoAplicado)
+
       const filtrosQuery = parametros.toString()
       const sufijo = filtrosQuery ? `&${filtrosQuery}` : ''
 
@@ -700,6 +764,12 @@ export default function Priorizacion() {
       setRanking(data.ranking ?? [])
       setZonas(data.zonas ?? [])
       setMeta(data.meta ?? null)
+      setSinSustento(data.sin_sustento ?? [])
+      setIndicadores(data.indicadores ?? [])
+      // Prellenar con el disponible del mes la primera vez
+      if (presupuestoAplicado === '' && data.meta?.presupuesto_origen === 'presupuestos_mes') {
+        setPresupuesto(String(data.meta.presupuesto))
+      }
       setComparacion(construirComparacion(
         equilibradoData.ranking ?? [],
         rezagoData.ranking ?? []
@@ -711,7 +781,15 @@ export default function Priorizacion() {
     }
   }
 
-  useEffect(() => { cargar() }, [escenario, filtrosAplicados])
+  useEffect(() => { cargar() }, [escenario, filtrosAplicados, presupuestoAplicado])
+
+  useEffect(() => {
+    if (loading || !volverAPresupuesto.current) return
+    volverAPresupuesto.current = false
+    requestAnimationFrame(() => {
+      seccionPresupuestoRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    })
+  }, [loading])
 
   const totalCriticos = ranking.filter(r => r.topsis_score >= 70).length
   const scorePromedio = ranking.length
@@ -724,6 +802,7 @@ export default function Priorizacion() {
     { id:'comparacion', label:'Comparar escenarios', icon:<BarChart2 size={15}/> },
     { id:'zonas',   label:'Por Zonas',      icon:<Map size={15}/> },
     { id:'ia',      label:'Recomendación IA', icon:<Brain size={15}/> },
+    { id:'calidad', label:'Calidad de datos', icon:<Database size={15}/> },
   ]
 
   return (
@@ -1111,7 +1190,10 @@ export default function Priorizacion() {
           </div>
 
           {/* Content */}
-          {loading && (
+          {/* La pestaña de calidad de datos (módulo DSS) carga sus propios datos, independiente de TOPSIS */}
+          {tab === 'calidad' && <TabCalidadDatos />}
+
+          {tab !== 'calidad' && loading && (
             <div style={{ textAlign:'center', padding:'60px 20px' }}>
               <div style={{ width:40, height:40, borderRadius:'50%', border:'4px solid var(--border)', borderTop:'4px solid var(--primary)', animation:'spin 0.8s linear infinite', margin:'0 auto 16px' }} />
               <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
@@ -1119,7 +1201,7 @@ export default function Priorizacion() {
             </div>
           )}
 
-          {error && (
+          {tab !== 'calidad' && error && (
             <div style={{ background:'#FFF5F7', border:'1px solid #FEB2B2', borderRadius:12, padding:24, textAlign:'center' }}>
               <p style={{ color:'#9D2449', fontWeight:700, margin:'0 0 12px' }}>⚠️ {error}</p>
               <button onClick={cargar} style={{ background:'var(--primary)', color:'white', border:'none', borderRadius:8, padding:'10px 24px', fontWeight:700, cursor:'pointer' }}>
@@ -1128,7 +1210,23 @@ export default function Priorizacion() {
             </div>
           )}
 
-          {!loading && !error && tab === 'ranking' && <TabRanking ranking={ranking} onAsignar={r => window.location.href = `/reportes/${r.id}`} />}
+          {tab === 'ranking' && !error && <AvisoEtl meta={meta} onEjecutado={cargar} />}
+          {/* Los indicadores se quedan montados durante la carga para no mover el contenido de abajo */}
+          {tab === 'ranking' && !error && <IndicadoresPanel indicadores={indicadores} />}
+          {tab === 'ranking' && !error && (
+            <div ref={seccionPresupuestoRef} style={{ scrollMarginTop: 16 }}>
+              <ResumenPresupuesto
+                meta={meta}
+                presupuesto={presupuesto}
+                setPresupuesto={setPresupuesto}
+                onRecalcular={recalcularPresupuesto}
+                loading={loading}
+              />
+            </div>
+          )}
+          {!loading && !error && tab === 'ranking' && <TabRanking ranking={ranking} onAsignar={r => window.location.href = `/reportes/${r.id}`} onExplicar={setFilaExplicada} />}
+          {!loading && !error && tab === 'ranking' && <SinSustento lista={sinSustento} />}
+          {filaExplicada && <PanelExplicacion fila={filaExplicada} onCerrar={() => setFilaExplicada(null)} />}
           {!loading && !error && tab === 'comparacion' && <TabComparacion comparacion={comparacion} />}
           {!loading && !error && tab === 'zonas'   && <TabZonas zonas={zonas} />}
           {!loading && !error && tab === 'ia'       && <TabIA key={escenario} ranking={ranking} zonas={zonas} />}
