@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Brain, AlertTriangle, MapPin, Clock, Zap, RefreshCw, ChevronRight, BarChart2, Map } from 'lucide-react'
+import { Brain, AlertTriangle, MapPin, Clock, Zap, RefreshCw, ChevronRight, BarChart2, Map, Database } from 'lucide-react'
 import Sidebar from '../components/Sidebar'
 import TopBar from '../components/TopBar'
+import TabCalidadDatos from '../components/dss/TabCalidadDatos'
 import { api } from '../lib/api'
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -724,6 +725,7 @@ export default function Priorizacion() {
     { id:'comparacion', label:'Comparar escenarios', icon:<BarChart2 size={15}/> },
     { id:'zonas',   label:'Por Zonas',      icon:<Map size={15}/> },
     { id:'ia',      label:'Recomendación IA', icon:<Brain size={15}/> },
+    { id:'calidad', label:'Calidad de datos', icon:<Database size={15}/> },
   ]
 
   return (
@@ -1111,7 +1113,10 @@ export default function Priorizacion() {
           </div>
 
           {/* Content */}
-          {loading && (
+          {/* La pestaña de calidad de datos (módulo DSS) carga sus propios datos, independiente de TOPSIS */}
+          {tab === 'calidad' && <TabCalidadDatos />}
+
+          {tab !== 'calidad' && loading && (
             <div style={{ textAlign:'center', padding:'60px 20px' }}>
               <div style={{ width:40, height:40, borderRadius:'50%', border:'4px solid var(--border)', borderTop:'4px solid var(--primary)', animation:'spin 0.8s linear infinite', margin:'0 auto 16px' }} />
               <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
@@ -1119,7 +1124,7 @@ export default function Priorizacion() {
             </div>
           )}
 
-          {error && (
+          {tab !== 'calidad' && error && (
             <div style={{ background:'#FFF5F7', border:'1px solid #FEB2B2', borderRadius:12, padding:24, textAlign:'center' }}>
               <p style={{ color:'#9D2449', fontWeight:700, margin:'0 0 12px' }}>⚠️ {error}</p>
               <button onClick={cargar} style={{ background:'var(--primary)', color:'white', border:'none', borderRadius:8, padding:'10px 24px', fontWeight:700, cursor:'pointer' }}>
