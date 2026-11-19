@@ -228,6 +228,263 @@ function TabZonas({ zonas }) {
   )
 }
 
+// ── Comparación de escenarios ─────────────────────────────────────────────────
+
+function construirComparacion(equilibrado = [], rezago = []) {
+  const rezagoPorId = new globalThis.Map(
+    rezago.map(reporte => [reporte.id, reporte])
+  )
+
+  return equilibrado.map(base => {
+    const alternativo = rezagoPorId.get(base.id)
+
+    if (!alternativo) {
+      return {
+        id: base.id,
+        folio: base.folio,
+        nombre_via: base.nombre_via,
+        colonia: base.colonia,
+        rank_equilibrado: base.rank,
+        rank_rezago: null,
+        score_equilibrado: base.topsis_score,
+        score_rezago: null,
+        movimiento: 0,
+        diferencia_score: 0,
+        explicacion: 'No existe información para comparar este reporte.',
+      }
+    }
+
+    const movimiento = base.rank - alternativo.rank
+    const diferenciaScore = Number(
+      (alternativo.topsis_score - base.topsis_score).toFixed(1)
+    )
+
+    let explicacion = 'Conserva la misma posición en los dos escenarios.'
+
+    if (movimiento > 0) {
+      explicacion =
+        `Sube ${movimiento} ${movimiento === 1 ? 'posición' : 'posiciones'} ` +
+        'porque el escenario de rezago da mayor importancia a los días pendientes.'
+    }
+
+    if (movimiento < 0) {
+      const posiciones = Math.abs(movimiento)
+      explicacion =
+        `Baja ${posiciones} ${posiciones === 1 ? 'posición' : 'posiciones'} ` +
+        'al disminuir el peso de la severidad y del tipo de vía.'
+    }
+
+    return {
+      id: base.id,
+      folio: base.folio,
+      nombre_via: base.nombre_via,
+      colonia: base.colonia,
+      rank_equilibrado: base.rank,
+      rank_rezago: alternativo.rank,
+      score_equilibrado: base.topsis_score,
+      score_rezago: alternativo.topsis_score,
+      movimiento,
+      diferencia_score: diferenciaScore,
+      explicacion,
+    }
+  })
+}
+
+function TabComparacion({ comparacion }) {
+  if (!comparacion.length) {
+    return (
+      <div style={{
+        textAlign: 'center',
+        padding: '60px 20px',
+        color: 'var(--text-muted)',
+      }}>
+        <p style={{ fontWeight: 700 }}>
+          No hay reportes disponibles para comparar
+        </p>
+      </div>
+    )
+  }
+
+  return (
+    <div style={{
+      background: 'var(--surface)',
+      border: '1px solid var(--border)',
+      borderRadius: 12,
+      overflow: 'hidden',
+    }}>
+      <div style={{
+        padding: '18px 20px',
+        borderBottom: '1px solid var(--border)',
+      }}>
+        <h3 style={{
+          margin: '0 0 5px',
+          fontSize: 16,
+          fontWeight: 900,
+          color: 'var(--text-primary)',
+        }}>
+          Comparación de escenarios TOPSIS
+        </h3>
+
+        <p style={{
+          margin: 0,
+          fontSize: 12,
+          color: 'var(--text-muted)',
+        }}>
+          Un movimiento positivo indica que el reporte recibe mayor prioridad
+          cuando se busca reducir el rezago.
+        </p>
+      </div>
+
+      <div style={{ overflowX: 'auto' }}>
+        <table style={{
+          width: '100%',
+          minWidth: 920,
+          borderCollapse: 'collapse',
+        }}>
+          <thead>
+            <tr style={{ background: '#F8FAFC' }}>
+              {[
+                'Reporte',
+                'Atención equilibrada',
+                'Reducción del rezago',
+                'Movimiento',
+                'Explicación',
+              ].map(titulo => (
+                <th key={titulo} style={{
+                  padding: '12px 14px',
+                  borderBottom: '1px solid var(--border)',
+                  textAlign: 'left',
+                  fontSize: 10,
+                  fontWeight: 900,
+                  color: 'var(--text-muted)',
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.5px',
+                }}>
+                  {titulo}
+                </th>
+              ))}
+            </tr>
+          </thead>
+
+          <tbody>
+            {comparacion.map(item => {
+              const sube = item.movimiento > 0
+              const baja = item.movimiento < 0
+              const color = sube
+                ? '#276749'
+                : baja
+                  ? '#9D2449'
+                  : '#64748B'
+
+              const simbolo = sube ? '↑' : baja ? '↓' : '→'
+              const movimiento = Math.abs(item.movimiento)
+
+              return (
+                <tr key={item.id}>
+                  <td style={{
+                    padding: '13px 14px',
+                    borderBottom: '1px solid var(--border)',
+                  }}>
+                    <div style={{
+                      fontSize: 11,
+                      fontFamily: 'monospace',
+                      color: 'var(--primary)',
+                      marginBottom: 3,
+                    }}>
+                      {item.folio}
+                    </div>
+
+                    <div style={{
+                      fontSize: 13,
+                      fontWeight: 800,
+                      color: 'var(--text-primary)',
+                    }}>
+                      {item.nombre_via}
+                    </div>
+
+                    <div style={{
+                      fontSize: 11,
+                      color: 'var(--text-muted)',
+                    }}>
+                      {item.colonia}
+                    </div>
+                  </td>
+
+                  <td style={{
+                    padding: '13px 14px',
+                    borderBottom: '1px solid var(--border)',
+                  }}>
+                    <strong>#{item.rank_equilibrado}</strong>
+                    <div style={{
+                      fontSize: 11,
+                      color: 'var(--text-muted)',
+                      marginTop: 3,
+                    }}>
+                      Score: {item.score_equilibrado}
+                    </div>
+                  </td>
+
+                  <td style={{
+                    padding: '13px 14px',
+                    borderBottom: '1px solid var(--border)',
+                  }}>
+                    <strong>#{item.rank_rezago ?? '—'}</strong>
+                    <div style={{
+                      fontSize: 11,
+                      color: 'var(--text-muted)',
+                      marginTop: 3,
+                    }}>
+                      Score: {item.score_rezago ?? '—'}
+                    </div>
+                  </td>
+
+                  <td style={{
+                    padding: '13px 14px',
+                    borderBottom: '1px solid var(--border)',
+                  }}>
+                    <span style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: 5,
+                      padding: '4px 9px',
+                      borderRadius: 99,
+                      background: `${color}15`,
+                      color,
+                      fontSize: 12,
+                      fontWeight: 900,
+                    }}>
+                      {simbolo} {movimiento}
+                    </span>
+
+                    <div style={{
+                      fontSize: 10,
+                      color: 'var(--text-muted)',
+                      marginTop: 5,
+                    }}>
+                      Score {item.diferencia_score > 0 ? '+' : ''}
+                      {item.diferencia_score}
+                    </div>
+                  </td>
+
+                  <td style={{
+                    padding: '13px 14px',
+                    borderBottom: '1px solid var(--border)',
+                    maxWidth: 320,
+                    fontSize: 12,
+                    lineHeight: 1.5,
+                    color: 'var(--text-secondary)',
+                  }}>
+                    {item.explicacion}
+                  </td>
+                </tr>
+              )
+            })}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  )
+}
 // ── Tab: Recomendación IA ─────────────────────────────────────────────────────
 function TabIA({ ranking, zonas }) {
   const [estado,  setEstado]  = useState('idle') // idle | cargando | listo | error
@@ -388,15 +645,65 @@ export default function Priorizacion() {
   const [meta,    setMeta]    = useState(null)
   const [loading, setLoading] = useState(true)
   const [error,   setError]   = useState(null)
+  const [escenario, setEscenario] = useState('equilibrado')
+  const [comparacion, setComparacion] = useState([])
+  const [coloniasDisponibles, setColoniasDisponibles] = useState([])
+  const [filtros, setFiltros] = useState({
+    buscar: '',
+    colonia: '',
+    estado: '',
+    severidad: '',
+    dias_min: '',
+  })
+  const [filtrosAplicados, setFiltrosAplicados] = useState({})
+
+  const aplicarFiltros = () => {
+    setFiltrosAplicados({ ...filtros })
+  }
+
+  const limpiarFiltros = () => {
+    const vacios = {
+      buscar: '',
+      colonia: '',
+      estado: '',
+      severidad: '',
+      dias_min: '',
+    }
+
+    setFiltros(vacios)
+    setFiltrosAplicados({})
+  }
 
   const cargar = async () => {
     setLoading(true)
     setError(null)
     try {
-      const data = await api.get('/api/analisis/topsis')
+      const parametros = new URLSearchParams()
+
+      Object.entries(filtrosAplicados).forEach(([clave, valor]) => {
+        if (valor !== '' && valor !== null && valor !== undefined) {
+          parametros.set(clave, valor)
+        }
+      })
+
+      const filtrosQuery = parametros.toString()
+      const sufijo = filtrosQuery ? `&${filtrosQuery}` : ''
+
+      const [equilibradoData, rezagoData] = await Promise.all([
+        api.get(`/api/analisis/topsis?escenario=equilibrado${sufijo}`),
+        api.get(`/api/analisis/topsis?escenario=rezago${sufijo}`),
+      ])
+
+      const data = escenario === 'rezago'
+        ? rezagoData
+        : equilibradoData
       setRanking(data.ranking ?? [])
       setZonas(data.zonas ?? [])
       setMeta(data.meta ?? null)
+      setComparacion(construirComparacion(
+        equilibradoData.ranking ?? [],
+        rezagoData.ranking ?? []
+      ))
     } catch (e) {
       setError(e.message || 'Error al cargar el análisis')
     } finally {
@@ -404,9 +711,9 @@ export default function Priorizacion() {
     }
   }
 
-  useEffect(() => { cargar() }, [])
+  useEffect(() => { cargar() }, [escenario, filtrosAplicados])
 
-  const totalCriticos = ranking.filter(r => r.prioridad === 'critica').length
+  const totalCriticos = ranking.filter(r => r.topsis_score >= 70).length
   const scorePromedio = ranking.length
     ? (ranking.reduce((s, r) => s + r.topsis_score, 0) / ranking.length).toFixed(1)
     : '—'
@@ -414,6 +721,7 @@ export default function Priorizacion() {
 
   const TABS = [
     { id:'ranking', label:'Ranking TOPSIS', icon:<BarChart2 size={15}/> },
+    { id:'comparacion', label:'Comparar escenarios', icon:<BarChart2 size={15}/> },
     { id:'zonas',   label:'Por Zonas',      icon:<Map size={15}/> },
     { id:'ia',      label:'Recomendación IA', icon:<Brain size={15}/> },
   ]
@@ -435,21 +743,333 @@ export default function Priorizacion() {
                   <span className="hidden-mobile">Centro de Análisis y</span> Priorización
                 </h1>
                 <p style={{ fontSize: 13, color: 'var(--text-muted)', margin: 0 }}>
-                  TOPSIS multicriterio · Severidad IA 30 % · Tipo vía 25 % · Días pendiente 20 % · Densidad zonal 15 % · Score IA 10 %
+                  {meta?.escenarios?.[escenario]?.descripcion
+                    ?? 'Calculando la configuración del escenario…'}
                 </p>
+
+                {meta?.pesos && (
+                  <p style={{ fontSize: 11, color: 'var(--text-muted)', margin: '5px 0 0' }}>
+                    Pesos TOPSIS ·
+                    Severidad {Math.round(meta.pesos.severidad * 100)} % ·
+                    Tipo de vía {Math.round(meta.pesos.tipo_via * 100)} % ·
+                    Días pendientes {Math.round(meta.pesos.dias_pendiente * 100)} % ·
+                    Densidad zonal {Math.round(meta.pesos.densidad_zona * 100)} % ·
+                    Score IA {Math.round(meta.pesos.score_ia * 100)} %
+                  </p>
+                )}
               </div>
-              <button onClick={cargar} disabled={loading} style={{
-                display: 'flex', alignItems: 'center', gap: 6, padding: '10px 18px',
-                border: '1px solid var(--border)', borderRadius: 8, background: 'var(--surface)',
-                cursor: 'pointer', fontSize: 12, fontWeight: 700, color: 'var(--text-secondary)',
-                opacity: loading ? 0.5 : 1,
-              }}>
-                <RefreshCw size={14} style={{ animation: loading ? 'spin 0.8s linear infinite' : 'none' }} />
-                Recalcular
-              </button>
+              <div style={{ display: 'flex', alignItems: 'flex-end', gap: 10, flexWrap: 'wrap' }}>
+                <label style={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: 4,
+                  fontSize: 10,
+                  fontWeight: 800,
+                  color: 'var(--text-muted)',
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.5px',
+                }}>
+                  Escenario
+
+                  <select
+                    value={escenario}
+                    onChange={e => setEscenario(e.target.value)}
+                    disabled={loading}
+                    style={{
+                      minWidth: 220,
+                      padding: '9px 12px',
+                      border: '1px solid var(--border)',
+                      borderRadius: 8,
+                      background: 'var(--surface)',
+                      color: 'var(--text-primary)',
+                      fontSize: 12,
+                      fontWeight: 700,
+                      cursor: loading ? 'wait' : 'pointer',
+                    }}
+                  >
+                    <option value="equilibrado">Atención equilibrada</option>
+                    <option value="rezago">Reducción del rezago</option>
+                  </select>
+                </label>
+
+                <button onClick={cargar} disabled={loading} style={{
+                  display: 'flex', alignItems: 'center', gap: 6, padding: '10px 18px',
+                  border: '1px solid var(--border)', borderRadius: 8, background: 'var(--surface)',
+                  cursor: loading ? 'wait' : 'pointer', fontSize: 12, fontWeight: 700,
+                  color: 'var(--text-secondary)',
+                  opacity: loading ? 0.5 : 1,
+                }}>
+                  <RefreshCw
+                    size={14}
+                    style={{ animation: loading ? 'spin 0.8s linear infinite' : 'none' }}
+                  />
+                  Recalcular
+                </button>
+              </div>
             </div>
           </div>
 
+          {/* Filtros del análisis */}
+          <div style={{
+            background: 'var(--surface)',
+            border: '1px solid var(--border)',
+            borderRadius: 12,
+            padding: 18,
+            marginBottom: 24,
+          }}>
+            <div style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              gap: 12,
+              marginBottom: 14,
+            }}>
+              <div>
+                <h3 style={{
+                  margin: '0 0 3px',
+                  fontSize: 14,
+                  fontWeight: 900,
+                  color: 'var(--text-primary)',
+                }}>
+                  Filtros del análisis
+                </h3>
+
+                <p style={{
+                  margin: 0,
+                  fontSize: 11,
+                  color: 'var(--text-muted)',
+                }}>
+                  Los filtros se aplican antes de calcular y normalizar TOPSIS.
+                </p>
+              </div>
+
+              {Object.values(filtrosAplicados).some(valor => valor !== '') && (
+                <span style={{
+                  padding: '3px 9px',
+                  borderRadius: 99,
+                  background: 'var(--primary-light)',
+                  color: 'var(--primary)',
+                  fontSize: 10,
+                  fontWeight: 900,
+                }}>
+                  FILTROS ACTIVOS
+                </span>
+              )}
+            </div>
+
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))',
+              gap: 12,
+            }}>
+              <label style={{
+                display: 'flex',
+                flexDirection: 'column',
+                gap: 5,
+                fontSize: 10,
+                fontWeight: 800,
+                color: 'var(--text-muted)',
+                textTransform: 'uppercase',
+              }}>
+                Folio, calle o dirección
+
+                <input
+                  type="text"
+                  value={filtros.buscar}
+                  onChange={e => setFiltros({
+                    ...filtros,
+                    buscar: e.target.value,
+                  })}
+                  onKeyDown={e => {
+                    if (e.key === 'Enter') aplicarFiltros()
+                  }}
+                  placeholder="Ej. Avenida"
+                  style={{
+                    padding: '9px 10px',
+                    border: '1px solid var(--border)',
+                    borderRadius: 8,
+                    background: 'var(--surface)',
+                    color: 'var(--text-primary)',
+                  }}
+                />
+              </label>
+
+              <label style={{
+                display: 'flex',
+                flexDirection: 'column',
+                gap: 5,
+                fontSize: 10,
+                fontWeight: 800,
+                color: 'var(--text-muted)',
+                textTransform: 'uppercase',
+              }}>
+                Colonia
+
+                <select
+                  value={filtros.colonia}
+                  onChange={e => setFiltros({
+                    ...filtros,
+                    colonia: e.target.value,
+                  })}
+                  style={{
+                    padding: '9px 10px',
+                    border: '1px solid var(--border)',
+                    borderRadius: 8,
+                    background: 'var(--surface)',
+                    color: 'var(--text-primary)',
+                  }}
+                >
+                  <option value="">Todas</option>
+
+                  {coloniasDisponibles.map(colonia => (
+                    <option key={colonia} value={colonia}>
+                      {colonia}
+                    </option>
+                  ))}
+                </select>
+              </label>
+
+              <label style={{
+                display: 'flex',
+                flexDirection: 'column',
+                gap: 5,
+                fontSize: 10,
+                fontWeight: 800,
+                color: 'var(--text-muted)',
+                textTransform: 'uppercase',
+              }}>
+                Estado
+
+                <select
+                  value={filtros.estado}
+                  onChange={e => setFiltros({
+                    ...filtros,
+                    estado: e.target.value,
+                  })}
+                  style={{
+                    padding: '9px 10px',
+                    border: '1px solid var(--border)',
+                    borderRadius: 8,
+                    background: 'var(--surface)',
+                    color: 'var(--text-primary)',
+                  }}
+                >
+                  <option value="">Todos</option>
+                  <option value="pendiente">Pendiente</option>
+                  <option value="validado">Validado</option>
+                  <option value="asignado">Asignado</option>
+                  <option value="en_proceso">En proceso</option>
+                </select>
+              </label>
+
+              <label style={{
+                display: 'flex',
+                flexDirection: 'column',
+                gap: 5,
+                fontSize: 10,
+                fontWeight: 800,
+                color: 'var(--text-muted)',
+                textTransform: 'uppercase',
+              }}>
+                Severidad
+
+                <select
+                  value={filtros.severidad}
+                  onChange={e => setFiltros({
+                    ...filtros,
+                    severidad: e.target.value,
+                  })}
+                  style={{
+                    padding: '9px 10px',
+                    border: '1px solid var(--border)',
+                    borderRadius: 8,
+                    background: 'var(--surface)',
+                    color: 'var(--text-primary)',
+                  }}
+                >
+                  <option value="">Todas</option>
+                  <option value="alta">Alta</option>
+                  <option value="media">Media</option>
+                  <option value="baja">Baja</option>
+                </select>
+              </label>
+
+              <label style={{
+                display: 'flex',
+                flexDirection: 'column',
+                gap: 5,
+                fontSize: 10,
+                fontWeight: 800,
+                color: 'var(--text-muted)',
+                textTransform: 'uppercase',
+              }}>
+                Días mínimos pendientes
+
+                <input
+                  type="number"
+                  min="0"
+                  max="3650"
+                  value={filtros.dias_min}
+                  onChange={e => setFiltros({
+                    ...filtros,
+                    dias_min: e.target.value,
+                  })}
+                  placeholder="Ej. 30"
+                  style={{
+                    padding: '9px 10px',
+                    border: '1px solid var(--border)',
+                    borderRadius: 8,
+                    background: 'var(--surface)',
+                    color: 'var(--text-primary)',
+                  }}
+                />
+              </label>
+            </div>
+
+            <div style={{
+              display: 'flex',
+              justifyContent: 'flex-end',
+              gap: 8,
+              marginTop: 14,
+              flexWrap: 'wrap',
+            }}>
+              <button
+                type="button"
+                onClick={limpiarFiltros}
+                disabled={loading}
+                style={{
+                  padding: '9px 16px',
+                  border: '1px solid var(--border)',
+                  borderRadius: 8,
+                  background: 'transparent',
+                  color: 'var(--text-secondary)',
+                  fontSize: 11,
+                  fontWeight: 800,
+                  cursor: loading ? 'wait' : 'pointer',
+                }}
+              >
+                Limpiar
+              </button>
+
+              <button
+                type="button"
+                onClick={aplicarFiltros}
+                disabled={loading}
+                style={{
+                  padding: '9px 18px',
+                  border: 'none',
+                  borderRadius: 8,
+                  background: 'var(--primary)',
+                  color: 'white',
+                  fontSize: 11,
+                  fontWeight: 800,
+                  cursor: loading ? 'wait' : 'pointer',
+                }}
+              >
+                Aplicar filtros
+              </button>
+            </div>
+          </div>
           {/* KPIs */}
           {!loading && !error && (
             <div className="grid-4" style={{ marginBottom: 28 }}>
@@ -509,8 +1129,9 @@ export default function Priorizacion() {
           )}
 
           {!loading && !error && tab === 'ranking' && <TabRanking ranking={ranking} onAsignar={r => window.location.href = `/reportes/${r.id}`} />}
+          {!loading && !error && tab === 'comparacion' && <TabComparacion comparacion={comparacion} />}
           {!loading && !error && tab === 'zonas'   && <TabZonas zonas={zonas} />}
-          {!loading && !error && tab === 'ia'       && <TabIA ranking={ranking} zonas={zonas} />}
+          {!loading && !error && tab === 'ia'       && <TabIA key={escenario} ranking={ranking} zonas={zonas} />}
         </main>
       </div>
     </div>

@@ -319,9 +319,5 @@ export default function ReparadorDetalle() {
         </div>
       </div>
     </div>
-
-        </div>
-      </div>
-    </div>
   )
 }
