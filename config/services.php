@@ -28,6 +28,11 @@ return [
         'region' => env('AWS_DEFAULT_REGION', 'us-east-1'),
     ],
 
+    // Reverse geocoding (OpenStreetMap). La política de uso exige un User-Agent que identifique la app.
+    'nominatim' => [
+        'user_agent' => env('NOMINATIM_USER_AGENT', 'BachesITO/1.0 (+https://bachesito.local)'),
+    ],
+
     'slack' => [
         'notifications' => [
             'bot_user_oauth_token' => env('SLACK_BOT_USER_OAUTH_TOKEN'),
