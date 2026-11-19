@@ -100,7 +100,8 @@ public function escenarioActual(): string
         $this->sinSustento  = [];
 
         if ($this->ejecucionEtl) {
-            $limpios = DssReporteLimpio::where('ejecucion_id', $this->ejecucionEtl->id)
+            $limpios = DssReporteLimpio::with('colonia:id,nombre')
+                ->where('ejecucion_id', $this->ejecucionEtl->id)
                 ->get()
                 ->keyBy('reporte_id');
 
@@ -376,6 +377,9 @@ public function escenarioActual(): string
             'ai_area_m2'    => $r->aiAnalisis?->area_estimada_m2,
             // Módulo DSS: datos del ETL y desglose del cálculo para la explicación
             'num_reportes_fusionados' => ($row['limpio'] ?? null)?->num_reportes_fusionados ?? 1,
+            // Colonia resuelta por el ETL (puede venir imputada); 'colonia' conserva el dato original
+            'colonia_dss'      => isset($row['limpio']) ? $row['limpio']->colonia?->nombre : $r->colonia?->nombre,
+            'colonia_imputada' => isset($row['limpio']) && $row['limpio']->colonia_id !== $r->colonia_id,
             'explicacion'   => [
                 'criterios' => collect($this->weights)->map(fn ($peso, $k) => [
                     'crudo'          => round($row['raw'][$k], 4),
