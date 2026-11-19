@@ -129,7 +129,7 @@ class ReporteController extends Controller
     }
 
     // Bounding box del municipio de Oaxaca de Juárez y área metropolitana
-    private const OAXACA_BOUNDS = [
+    public const OAXACA_BOUNDS = [
         'lat_min' => 16.90, 'lat_max' => 17.25,
         'lng_min' => -96.95, 'lng_max' => -96.50,
     ];
