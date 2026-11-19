@@ -11,6 +11,7 @@ use App\Http\Controllers\Api\AiController;
 use App\Http\Controllers\Api\GaleriaController;
 use App\Http\Controllers\Api\UbicacionController;
 use App\Http\Controllers\Api\AnalisisController;
+use App\Http\Controllers\Api\DssController;
 
 // Públicas
 Route::post('/auth/login',           [AuthController::class,  'login']);
@@ -59,6 +60,11 @@ Route::middleware('auth:sanctum')->group(function () {
     // Análisis TOPSIS + IA
     Route::get('/analisis/topsis',              [AnalisisController::class, 'topsis']);
     Route::post('/analisis/ia-recomendacion',   [AnalisisController::class, 'iaRecomendacion']);
+
+    // Módulo DSS (Proyecto Integrador DSTD): ETL y calidad de datos
+    Route::get('/dss/etl/ultima',     [DssController::class, 'ultimaEjecucion']);
+    Route::get('/dss/etl/anomalias',  [DssController::class, 'anomalias']);
+    Route::post('/dss/etl/ejecutar',  [DssController::class, 'ejecutar']);
 });
 
 // Catálogos — public
