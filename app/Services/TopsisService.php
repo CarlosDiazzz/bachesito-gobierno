@@ -8,13 +8,60 @@ use Illuminate\Support\Collection;
 class TopsisService
 {
     // Pesos multicriterio — suma = 1.0
-    private array $weights = [
-        'severidad'      => 0.30,
-        'tipo_via'       => 0.25,
-        'dias_pendiente' => 0.20,
-        'densidad_zona'  => 0.15,
-        'score_ia'       => 0.10,
-    ];
+    private const ESCENARIOS = [
+    'equilibrado' => [
+        'nombre' => 'Atención equilibrada',
+        'descripcion' => 'Equilibra gravedad, tipo de vía, antigüedad, concentración de reportes y análisis técnico.',
+        'pesos' => [
+            'severidad'      => 0.30,
+            'tipo_via'       => 0.25,
+            'dias_pendiente' => 0.20,
+            'densidad_zona'  => 0.15,
+            'score_ia'       => 0.10,
+        ],
+    ],
+    'rezago' => [
+        'nombre' => 'Reducción del rezago',
+        'descripcion' => 'Aumenta la importancia de los reportes que llevan más días sin ser atendidos.',
+        'pesos' => [
+            'severidad'      => 0.25,
+            'tipo_via'       => 0.15,
+            'dias_pendiente' => 0.40,
+            'densidad_zona'  => 0.15,
+            'score_ia'       => 0.05,
+        ],
+    ],
+];
+
+private array $weights;
+private string $escenarioActual = 'equilibrado';
+
+public function __construct()
+{
+    $this->usarEscenario($this->escenarioActual);
+}
+
+public function usarEscenario(string $escenario): void
+{
+    if (!array_key_exists($escenario, self::ESCENARIOS)) {
+        throw new \InvalidArgumentException(
+            "El escenario de priorización '{$escenario}' no existe."
+        );
+    }
+
+    $this->escenarioActual = $escenario;
+    $this->weights = self::ESCENARIOS[$escenario]['pesos'];
+}
+
+public function escenarios(): array
+{
+    return self::ESCENARIOS;
+}
+
+public function escenarioActual(): string
+{
+    return $this->escenarioActual;
+}
 
     private array $sevMap = [
         'alta'  => 1.00,

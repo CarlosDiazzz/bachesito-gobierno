@@ -388,12 +388,13 @@ export default function Priorizacion() {
   const [meta,    setMeta]    = useState(null)
   const [loading, setLoading] = useState(true)
   const [error,   setError]   = useState(null)
+  const [escenario, setEscenario] = useState('equilibrado')
 
   const cargar = async () => {
     setLoading(true)
     setError(null)
     try {
-      const data = await api.get('/api/analisis/topsis')
+      const data = await api.get(`/api/analisis/topsis?escenario=${encodeURIComponent(escenario)}`)
       setRanking(data.ranking ?? [])
       setZonas(data.zonas ?? [])
       setMeta(data.meta ?? null)
@@ -404,9 +405,9 @@ export default function Priorizacion() {
     }
   }
 
-  useEffect(() => { cargar() }, [])
+  useEffect(() => { cargar() }, [escenario])
 
-  const totalCriticos = ranking.filter(r => r.prioridad === 'critica').length
+  const totalCriticos = ranking.filter(r => r.topsis_score >= 70).length
   const scorePromedio = ranking.length
     ? (ranking.reduce((s, r) => s + r.topsis_score, 0) / ranking.length).toFixed(1)
     : '—'
@@ -435,18 +436,69 @@ export default function Priorizacion() {
                   <span className="hidden-mobile">Centro de Análisis y</span> Priorización
                 </h1>
                 <p style={{ fontSize: 13, color: 'var(--text-muted)', margin: 0 }}>
-                  TOPSIS multicriterio · Severidad IA 30 % · Tipo vía 25 % · Días pendiente 20 % · Densidad zonal 15 % · Score IA 10 %
+                  {meta?.escenarios?.[escenario]?.descripcion
+                    ?? 'Calculando la configuración del escenario…'}
                 </p>
+
+                {meta?.pesos && (
+                  <p style={{ fontSize: 11, color: 'var(--text-muted)', margin: '5px 0 0' }}>
+                    Pesos TOPSIS ·
+                    Severidad {Math.round(meta.pesos.severidad * 100)} % ·
+                    Tipo de vía {Math.round(meta.pesos.tipo_via * 100)} % ·
+                    Días pendientes {Math.round(meta.pesos.dias_pendiente * 100)} % ·
+                    Densidad zonal {Math.round(meta.pesos.densidad_zona * 100)} % ·
+                    Score IA {Math.round(meta.pesos.score_ia * 100)} %
+                  </p>
+                )}
               </div>
-              <button onClick={cargar} disabled={loading} style={{
-                display: 'flex', alignItems: 'center', gap: 6, padding: '10px 18px',
-                border: '1px solid var(--border)', borderRadius: 8, background: 'var(--surface)',
-                cursor: 'pointer', fontSize: 12, fontWeight: 700, color: 'var(--text-secondary)',
-                opacity: loading ? 0.5 : 1,
-              }}>
-                <RefreshCw size={14} style={{ animation: loading ? 'spin 0.8s linear infinite' : 'none' }} />
-                Recalcular
-              </button>
+              <div style={{ display: 'flex', alignItems: 'flex-end', gap: 10, flexWrap: 'wrap' }}>
+                <label style={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: 4,
+                  fontSize: 10,
+                  fontWeight: 800,
+                  color: 'var(--text-muted)',
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.5px',
+                }}>
+                  Escenario
+
+                  <select
+                    value={escenario}
+                    onChange={e => setEscenario(e.target.value)}
+                    disabled={loading}
+                    style={{
+                      minWidth: 220,
+                      padding: '9px 12px',
+                      border: '1px solid var(--border)',
+                      borderRadius: 8,
+                      background: 'var(--surface)',
+                      color: 'var(--text-primary)',
+                      fontSize: 12,
+                      fontWeight: 700,
+                      cursor: loading ? 'wait' : 'pointer',
+                    }}
+                  >
+                    <option value="equilibrado">Atención equilibrada</option>
+                    <option value="rezago">Reducción del rezago</option>
+                  </select>
+                </label>
+
+                <button onClick={cargar} disabled={loading} style={{
+                  display: 'flex', alignItems: 'center', gap: 6, padding: '10px 18px',
+                  border: '1px solid var(--border)', borderRadius: 8, background: 'var(--surface)',
+                  cursor: loading ? 'wait' : 'pointer', fontSize: 12, fontWeight: 700,
+                  color: 'var(--text-secondary)',
+                  opacity: loading ? 0.5 : 1,
+                }}>
+                  <RefreshCw
+                    size={14}
+                    style={{ animation: loading ? 'spin 0.8s linear infinite' : 'none' }}
+                  />
+                  Recalcular
+                </button>
+              </div>
             </div>
           </div>
 
@@ -510,7 +562,7 @@ export default function Priorizacion() {
 
           {!loading && !error && tab === 'ranking' && <TabRanking ranking={ranking} onAsignar={r => window.location.href = `/reportes/${r.id}`} />}
           {!loading && !error && tab === 'zonas'   && <TabZonas zonas={zonas} />}
-          {!loading && !error && tab === 'ia'       && <TabIA ranking={ranking} zonas={zonas} />}
+          {!loading && !error && tab === 'ia'       && <TabIA key={escenario} ranking={ranking} zonas={zonas} />}
         </main>
       </div>
     </div>

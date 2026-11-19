@@ -15,21 +15,31 @@ class AnalisisController extends Controller
         private AiService     $ai,
     ) {}
 
-    public function topsis(): JsonResponse
-    {
-        $ranking = $this->topsis->rankear();
-        $zonas   = $this->topsis->resumenZonas();
+  public function topsis(Request $request): JsonResponse
+{
+    $datos = $request->validate([
+        'escenario' => 'nullable|string|in:equilibrado,rezago',
+    ]);
 
-        return response()->json([
-            'ranking'      => $ranking,
-            'zonas'        => $zonas,
-            'meta'         => [
-                'total'        => count($ranking),
-                'pesos'        => $this->topsis->pesos(),
-                'generado_at'  => now()->toIso8601String(),
-            ],
-        ]);
-    }
+    $escenario = $datos['escenario'] ?? 'equilibrado';
+
+    $this->topsis->usarEscenario($escenario);
+
+    $ranking = $this->topsis->rankear();
+    $zonas = $this->topsis->resumenZonas();
+
+    return response()->json([
+        'ranking' => $ranking,
+        'zonas' => $zonas,
+        'meta' => [
+            'total' => count($ranking),
+            'escenario' => $this->topsis->escenarioActual(),
+            'pesos' => $this->topsis->pesos(),
+            'escenarios' => $this->topsis->escenarios(),
+            'generado_at' => now()->toIso8601String(),
+        ],
+    ]);
+}
 
     public function iaRecomendacion(Request $request): JsonResponse
     {
