@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Brain, AlertTriangle, MapPin, Clock, Zap, RefreshCw, ChevronRight, BarChart2, Map, Database } from 'lucide-react'
 import Sidebar from '../components/Sidebar'
@@ -708,7 +708,13 @@ export default function Priorizacion() {
   const [indicadores, setIndicadores] = useState([])
   const [filaExplicada, setFilaExplicada] = useState(null)
 
+  // Al recalcular, el ranking se desmonta mientras carga y la página se acorta;
+  // al terminar se regresa a la sección de recomendación en lugar de quedar arriba.
+  const seccionPresupuestoRef = useRef(null)
+  const volverAPresupuesto = useRef(false)
+
   const recalcularPresupuesto = () => {
+    volverAPresupuesto.current = true
     if (presupuesto === presupuestoAplicado) cargar()
     else setPresupuestoAplicado(presupuesto)
   }
@@ -776,6 +782,14 @@ export default function Priorizacion() {
   }
 
   useEffect(() => { cargar() }, [escenario, filtrosAplicados, presupuestoAplicado])
+
+  useEffect(() => {
+    if (loading || !volverAPresupuesto.current) return
+    volverAPresupuesto.current = false
+    requestAnimationFrame(() => {
+      seccionPresupuestoRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    })
+  }, [loading])
 
   const totalCriticos = ranking.filter(r => r.topsis_score >= 70).length
   const scorePromedio = ranking.length
@@ -1197,15 +1211,18 @@ export default function Priorizacion() {
           )}
 
           {tab === 'ranking' && !error && <AvisoEtl meta={meta} onEjecutado={cargar} />}
-          {tab === 'ranking' && !error && !loading && <IndicadoresPanel indicadores={indicadores} />}
+          {/* Los indicadores se quedan montados durante la carga para no mover el contenido de abajo */}
+          {tab === 'ranking' && !error && <IndicadoresPanel indicadores={indicadores} />}
           {tab === 'ranking' && !error && (
-            <ResumenPresupuesto
-              meta={meta}
-              presupuesto={presupuesto}
-              setPresupuesto={setPresupuesto}
-              onRecalcular={recalcularPresupuesto}
-              loading={loading}
-            />
+            <div ref={seccionPresupuestoRef} style={{ scrollMarginTop: 16 }}>
+              <ResumenPresupuesto
+                meta={meta}
+                presupuesto={presupuesto}
+                setPresupuesto={setPresupuesto}
+                onRecalcular={recalcularPresupuesto}
+                loading={loading}
+              />
+            </div>
           )}
           {!loading && !error && tab === 'ranking' && <TabRanking ranking={ranking} onAsignar={r => window.location.href = `/reportes/${r.id}`} onExplicar={setFilaExplicada} />}
           {!loading && !error && tab === 'ranking' && <SinSustento lista={sinSustento} />}
