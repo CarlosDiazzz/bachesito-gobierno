@@ -94,7 +94,7 @@ construye sobre el sistema existente sin modificar la tabla `reportes`.
 
 | Componente | Ubicación |
 |---|---|
-| Proceso ETL (extraer → transformar → cargar) con 5 reglas de limpieza | `app/Services/Dss/EtlService.php` |
+| Proceso ETL (extraer → transformar → cargar) con 6 reglas de limpieza | `app/Services/Dss/EtlService.php` |
 | Comando de consola `php artisan dss:etl` | `app/Console/Commands/DssEtlCommand.php` |
 | Tablas `dss_etl_ejecuciones`, `dss_etl_anomalias`, `dss_reportes_limpios` | `database/migrations/2026_11_19_*` y modelos `app/Models/Dss*.php` |
 | API `/api/dss/etl/{ultima,anomalias,ejecutar}` | `app/Http/Controllers/Api/DssController.php` |
