@@ -101,10 +101,16 @@ construye sobre el sistema existente sin modificar la tabla `reportes`.
 | Pestaña **Calidad de datos** en Priorización | `resources/js/components/dss/TabCalidadDatos.jsx` |
 | Datos sucios simulados (folios `SIM-`) | `database/seeders/DatosSuciosSeeder.php` |
 | Pruebas de cada regla y de reproducibilidad | `tests/Feature/Dss/EtlServiceTest.php` |
-| Documentación | [`docs/dss/diccionario-datos.md`](docs/dss/diccionario-datos.md), [`docs/dss/etl.md`](docs/dss/etl.md) |
+| TOPSIS sobre datos limpios del ETL (excluye descartados, fusionados y sin sustento) | `app/Services/TopsisService.php` (método `rankear`) |
+| Costo estimado, selección por presupuesto y explicación por bache | `app/Services/Dss/RecomendacionService.php` |
+| Parámetros de costo (supuestos) en `dss_parametros` | `app/Models/DssParametro.php`, `database/seeders/DssParametrosSeeder.php` |
+| Presupuesto, decisión, "¿Por qué?" y "Sin sustento" en la pestaña Ranking | `resources/js/components/dss/{ResumenPresupuesto,PanelExplicacion,SinSustento}.jsx` |
+| Documentación | [`docs/dss/modelo.md`](docs/dss/modelo.md), [`docs/dss/diccionario-datos.md`](docs/dss/diccionario-datos.md), [`docs/dss/etl.md`](docs/dss/etl.md) |
 
-Único cambio en código existente: `ReporteController::OAXACA_BOUNDS` pasó de `private` a `public` para
-reutilizar los mismos límites geográficos en el ETL.
+Cambios en código existente:
+- `ReporteController::OAXACA_BOUNDS` pasó de `private` a `public` para reutilizar los mismos límites geográficos en el ETL.
+- `TopsisService`: corrección del cálculo de días pendientes con Carbon 3 y nueva fuente de datos limpia. Los pesos y la fórmula TOPSIS no cambiaron.
+- `GET /api/analisis/topsis`: acepta `presupuesto` y agrega campos (`costo_estimado`, `decision`, `explicacion`, `sin_sustento`, `meta.fuente`…) sin quitar ni renombrar los existentes.
 
 ```bash
 php artisan migrate
