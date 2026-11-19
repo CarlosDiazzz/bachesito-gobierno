@@ -263,6 +263,65 @@ class EtlServiceTest extends TestCase
         $this->assertNotNull($this->limpioDe($id));
     }
 
+    // ── Regla 6: colonia faltante ─────────────────────────────────────────────
+
+    public function test_regla_6_colonia_nula_se_imputa_por_la_calle(): void
+    {
+        $reformaId = DB::table('colonias')->insertGetId([
+            'municipio_id' => $this->municipioId, 'nombre' => 'Reforma', 'cp' => '68050',
+        ]);
+        $calleId = DB::table('calles')->insertGetId([
+            'municipio_id' => $this->municipioId, 'colonia_id' => $reformaId,
+            'nombre' => 'Calle Eucalipto', 'tipo' => 'calle', 'importancia' => 'local',
+            'created_at' => now(), 'updated_at' => now(),
+        ]);
+        $id = $this->crearReporte(['colonia_id' => null, 'calle_id' => $calleId]);
+
+        $e = $this->ejecutar();
+
+        $a = $this->anomaliasDe($id)->sole();
+        $this->assertSame('campo_faltante', $a->tipo_anomalia);
+        $this->assertSame('colonia_id', $a->campo);
+        $this->assertSame('imputado', $a->accion_tomada);
+        $this->assertSame('advertencia', $a->severidad);
+        $this->assertStringContainsString("'Reforma' de la calle asociada", $a->regla_aplicada);
+        $this->assertSame($reformaId, $this->limpioDe($id)->colonia_id);
+        $this->assertSame(1, $e->registros_con_advertencia);
+        // El ETL no modifica reportes: la colonia imputada solo vive en dss_reportes_limpios
+        $this->assertNull(DB::table('reportes')->where('id', $id)->value('colonia_id'));
+    }
+
+    public function test_regla_6_colonia_nula_se_imputa_por_el_reporte_limpio_mas_cercano(): void
+    {
+        $vecino = $this->crearReporte(['latitud' => 17.0600, 'longitud' => -96.7100]);
+        // ~100 m al norte del vecino, sin colonia ni calle
+        $sinColonia = $this->crearReporte(['colonia_id' => null, 'latitud' => 17.0609, 'longitud' => -96.7100]);
+
+        $this->ejecutar();
+
+        $a = $this->anomaliasDe($sinColonia)->sole();
+        $this->assertSame('imputado', $a->accion_tomada);
+        $this->assertStringContainsString('reporte limpio más cercano (TEST-0001', $a->regla_aplicada);
+        $this->assertSame($this->coloniaId, $this->limpioDe($sinColonia)->colonia_id);
+        $this->assertCount(0, $this->anomaliasDe($vecino));
+    }
+
+    public function test_regla_6_colonia_nula_sin_referencia_se_marca_sin_colonia(): void
+    {
+        $this->crearReporte(['latitud' => 17.0600, 'longitud' => -96.7100]);
+        // ~1 km del único reporte con colonia: fuera del radio de 200 m
+        $aislado = $this->crearReporte(['colonia_id' => null, 'latitud' => 17.0690, 'longitud' => -96.7100]);
+
+        $e = $this->ejecutar();
+
+        $a = $this->anomaliasDe($aislado)->sole();
+        $this->assertSame('campo_faltante', $a->tipo_anomalia);
+        $this->assertSame('marcado', $a->accion_tomada);
+        $this->assertStringContainsString("'Sin colonia'", $a->regla_aplicada);
+        $this->assertNull($this->limpioDe($aislado)->colonia_id);
+        $this->assertSame(2, $e->registros_cargados);   // se carga, no se descarta
+    }
+
     // ── Reproducibilidad e integridad ─────────────────────────────────────────
 
     public function test_dos_ejecuciones_sobre_los_mismos_datos_dan_los_mismos_conteos(): void

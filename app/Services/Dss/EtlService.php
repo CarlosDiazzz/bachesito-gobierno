@@ -3,6 +3,7 @@
 namespace App\Services\Dss;
 
 use App\Http\Controllers\Api\ReporteController;
+use App\Models\Colonia;
 use App\Models\DssEtlEjecucion;
 use App\Models\Reporte;
 use Carbon\CarbonInterface;
@@ -36,6 +37,9 @@ class EtlService
 
     /** Regla 4: la IA guarda la confianza en escala 0–100; se divide entre este valor. */
     public const ESCALA_CONFIANZA = 100;
+
+    /** Regla 6: radio (m) para imputar la colonia del reporte limpio más cercano. */
+    public const RADIO_IMPUTACION_COLONIA_M = 200;
 
     /** Radio (m) para calcular la densidad de la zona (mismo valor que TopsisService). */
     public const RADIO_DENSIDAD_M = 200;
@@ -141,7 +145,7 @@ class EtlService
         [$conservados, $fusionados, $anomaliasDuplicados] = $this->deduplicar($validos);
         array_push($anomalias, ...$anomaliasDuplicados);
 
-        // Reglas 3, 4 y 5b: imputan o marcan, pero el registro se carga.
+        // Reglas 3, 4, 5b y 6: imputan o marcan, pero el registro se carga.
         $limpios = [];
         $conAdvertencia = 0;
 
@@ -149,8 +153,9 @@ class EtlService
             [$tipoVia, $anomaliaVia] = $this->imputarTipoVia($r);
             $anomaliaIa = $this->validarAnalisisIa($r);
             $anomaliaResolucion = $this->validarFechaResolucion($r);
+            [$coloniaId, $anomaliaColonia] = $this->imputarColonia($r, $conservados);
 
-            $propias = array_filter([$anomaliaVia, $anomaliaIa, $anomaliaResolucion]);
+            $propias = array_filter([$anomaliaVia, $anomaliaIa, $anomaliaResolucion, $anomaliaColonia]);
             array_push($anomalias, ...$propias);
 
             if (count($propias) > 0) {
@@ -160,6 +165,7 @@ class EtlService
             $limpios[$r->id] = [
                 'reporte' => $r,
                 'tipo_via' => $tipoVia,
+                'colonia_id' => $coloniaId,
                 'num_reportes_fusionados' => 1 + ($fusionados[$r->id] ?? 0),
                 'datos_suficientes' => $anomaliaIa === null,
             ];
@@ -354,6 +360,67 @@ class EtlService
         );
     }
 
+    /**
+     * Regla 6: colonia_id nulo → se imputa la colonia de la calle asociada o, si no, la del
+     * reporte limpio más cercano (con colonia original) a ≤ RADIO_IMPUTACION_COLONIA_M metros.
+     * Si no es posible, se marca y el reporte queda como "Sin colonia".
+     *
+     * @return array{0: ?int, 1: ?array}
+     */
+    private function imputarColonia(Reporte $r, Collection $conservados): array
+    {
+        if ($r->colonia_id !== null) {
+            return [$r->colonia_id, null];
+        }
+
+        if ($r->calle?->colonia_id) {
+            $nombre = Colonia::find($r->calle->colonia_id)?->nombre ?? "#{$r->calle->colonia_id}";
+
+            return [$r->calle->colonia_id, $this->anomalia(
+                $r, 'campo_faltante', 'colonia_id', null, 'imputado',
+                "colonia_id nulo: se imputa la colonia '{$nombre}' de la calle asociada ('{$r->calle->nombre}').",
+                'advertencia'
+            )];
+        }
+
+        // Solo se toman como referencia reportes con colonia original (no imputada en esta ejecución)
+        $cercano = $conservados
+            ->filter(fn (Reporte $o) => $o->id !== $r->id && $o->colonia_id !== null)
+            ->map(fn (Reporte $o) => [
+                'reporte' => $o,
+                'distancia' => $this->distanciaM(
+                    (float) $r->latitud, (float) $r->longitud,
+                    (float) $o->latitud, (float) $o->longitud
+                ),
+            ])
+            ->filter(fn ($c) => $c['distancia'] <= self::RADIO_IMPUTACION_COLONIA_M)
+            ->sortBy([['distancia', 'asc'], [fn ($a, $b) => $a['reporte']->id <=> $b['reporte']->id]])
+            ->first();
+
+        if ($cercano !== null) {
+            $o = $cercano['reporte'];
+            $nombre = $o->colonia?->nombre ?? "#{$o->colonia_id}";
+
+            return [$o->colonia_id, $this->anomalia(
+                $r, 'campo_faltante', 'colonia_id', null, 'imputado',
+                sprintf(
+                    "colonia_id nulo y sin calle con colonia: se imputa '%s' del reporte limpio más cercano (%s, a %.0f m; radio máximo %d m).",
+                    $nombre, $o->folio, $cercano['distancia'], self::RADIO_IMPUTACION_COLONIA_M
+                ),
+                'advertencia'
+            )];
+        }
+
+        return [null, $this->anomalia(
+            $r, 'campo_faltante', 'colonia_id', null, 'marcado',
+            sprintf(
+                "colonia_id nulo, sin calle con colonia y sin reporte limpio con colonia a ≤ %d m: queda como 'Sin colonia'.",
+                self::RADIO_IMPUTACION_COLONIA_M
+            ),
+            'advertencia'
+        )];
+    }
+
     /** Calcula los 5 criterios TOPSIS sobre los registros ya depurados. */
     private function calcularCriterios(array $limpios): array
     {
@@ -379,7 +446,7 @@ class EtlService
                 'dias_pendiente' => max($dias, 1),
                 'densidad_zona' => $densidad + 1,
                 'score_ia' => (float) ($r->score_prioridad ?? 0),
-                'colonia_id' => $r->colonia_id,
+                'colonia_id' => $fila['colonia_id'],
                 'latitud' => $r->latitud,
                 'longitud' => $r->longitud,
                 'num_reportes_fusionados' => $fila['num_reportes_fusionados'],
