@@ -124,7 +124,14 @@ function TabRanking({ ranking, onAsignar, onExplicar }) {
                   <p style={{ fontSize:14, fontWeight:800, color:'var(--text-primary)', margin:'0 0 2px', whiteSpace:'nowrap', overflow:'hidden', textOverflow:'ellipsis' }}>
                     {r.nombre_via}
                   </p>
-                  <p style={{ fontSize:11, color:'var(--text-muted)', margin:0 }}>{r.colonia}</p>
+                  <p style={{ fontSize:11, color:'var(--text-muted)', margin:0 }}>
+                    {r.colonia_dss ?? r.colonia}
+                    {r.colonia_imputada && r.colonia_dss && (
+                      <span title="Colonia imputada por el ETL (el reporte no la tenía)" style={{ marginLeft:6, fontSize:9, fontWeight:800, color:'#92400E', background:'#FEF3C7', padding:'1px 6px', borderRadius:99 }}>
+                        IMPUTADA
+                      </span>
+                    )}
+                  </p>
                 </div>
 
                 {/* TOPSIS score */}

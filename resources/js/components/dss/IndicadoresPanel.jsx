@@ -19,6 +19,7 @@ function formatoValor(ind) {
 function Tarjeta({ ind, abierto, onToggle }) {
   const { icon, color } = CFG[ind.clave] ?? { icon:<Info size={16}/>, color:'var(--primary)' }
   const top = ind.clave === 'concentracion_colonias' ? (ind.detalle?.top ?? []) : []
+  const sinColonia = ind.clave === 'concentracion_colonias' ? ind.detalle?.sin_colonia : null
 
   return (
     <div style={{ background:'var(--surface)', border:'1px solid var(--border)', borderRadius:12, padding:16, display:'flex', flexDirection:'column', gap:6 }}>
@@ -49,6 +50,18 @@ function Tarjeta({ ind, abierto, onToggle }) {
               </div>
             </div>
           ))}
+        </div>
+      )}
+
+      {sinColonia?.pendientes > 0 && (
+        <div title="Reportes sin colonia tras el ETL; no compiten en el top 5" style={{ borderTop:'1px dashed var(--border)', paddingTop:6 }}>
+          <div style={{ display:'flex', justifyContent:'space-between', fontSize:10, fontWeight:700, color:'var(--text-muted)', marginBottom:2 }}>
+            <span>{sinColonia.texto}</span>
+            <span>{sinColonia.porcentaje} %</span>
+          </div>
+          <div style={{ height:5, background:'#F1F5F9', borderRadius:99, overflow:'hidden' }}>
+            <div style={{ width:`${sinColonia.porcentaje}%`, height:'100%', background:'#94A3B8', borderRadius:99 }} />
+          </div>
         </div>
       )}
 
