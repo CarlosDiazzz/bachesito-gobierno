@@ -213,7 +213,10 @@ class TopsisRecomendacionTest extends TestCase
         $this->assertTrue($f['B2']['costo_detalle']['area_supuesta']);
         $this->assertEqualsWithDelta(60, $r['meta']['saldo_restante'], 0.01);
         $this->assertStringStartsWith('Recomendado: posición 3 de 3', $f['B3']['explicacion']['frase']);
-        $this->assertStringContainsString('entra con saldo de $60', $f['B3']['explicacion']['frase']);
+        $this->assertSame(
+            'Recomendado: posición 3 de 3, destaca en tipo de vía; costo $1,290, entra con saldo de $60.',
+            $f['B3']['explicacion']['frase']
+        );
         $this->assertStringStartsWith('En espera: posición 2 de 3', $f['B2']['explicacion']['frase']);
     }
 
