@@ -44,7 +44,8 @@ umbrales: ≥ 90 % alta, ≥ 75 % aceptable y < 75 % baja.
 | Situación | Resultado |
 |---|---|
 | No hay baches rankeados | Todos los valores en 0 (no hay división entre cero) y la interpretación dice "No hay baches pendientes en la selección". |
-| No hay presupuesto (ni parámetro ni registro del mes) | Cobertura y baches cubiertos en 0, con la interpretación "Sin presupuesto definido". |
+| No hay presupuesto (ni parámetro ni registro del mes) | Cobertura y baches cubiertos en `null` (no 0, para no sugerir una cobertura nula), con la interpretación "Sin presupuesto definido". |
+| Hay reportes "sin sustento" | No entran al denominador. La interpretación de cobertura y de baches cubiertos lo indica: "No incluye N reportes excluidos por falta de sustento". |
 | No hay ejecución ETL | Tasa de calidad `null` ("No disponible"), para no dar a entender una calidad del 0 %. |
 | Reporte sin colonia | Se agrupa como "Sin colonia". |
 
@@ -53,8 +54,16 @@ umbrales: ≥ 90 % alta, ≥ 75 % aceptable y < 75 % baja.
 El ranking usa la "foto" de la última ejecución del ETL. En `meta` se agrega:
 
 - `reportes_nuevos_desde_etl`: número de reportes **activos** con `created_at` o `updated_at`
-  posterior al inicio (`iniciado_at`) de la ejecución usada. Un cambio de estado también cuenta,
-  porque el ETL guardó el estado anterior.
+  posterior al inicio (`iniciado_at`) de la ejecución usada, o cuyo análisis IA
+  (`reporte_ai_analisis.updated_at`) cambió después. Un cambio de estado también cuenta, porque el
+  ETL guardó el estado anterior.
+
+**Por qué `updated_at` y no `historial_estados`:** el historial solo registra cambios de estado y no
+detectaría reportes nuevos, recálculos de score ni nuevos análisis IA. Se revisó que ningún proceso
+escriba en `reportes` sin un cambio real: todas las escrituras pasan por Eloquent `update()`, que
+solo ejecuta el `UPDATE` cuando algún atributo cambió. No hay `$touches` entre modelos ni updates
+directos con `DB::table('reportes')`. El análisis IA se cuenta aparte porque un re-análisis puede
+cambiar severidad, confianza o área sin cambiar el score del reporte.
 - `etl_desactualizado`: `true` si ese número es mayor que 0.
 
 El conteo es global (no depende de los filtros), porque mide qué tan actualizado está el ETL en

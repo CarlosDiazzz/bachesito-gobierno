@@ -57,7 +57,9 @@ class AnalisisController extends Controller
         'ranking' => $ranking,
         'zonas' => $zonas,
         'sin_sustento' => $this->topsis->sinSustento(),
-        'indicadores' => $this->indicadores->calcular($ranking, $recomendacion['meta'], $fuente),
+        'indicadores' => $this->indicadores->calcular(
+            $ranking, $recomendacion['meta'], $fuente, count($this->topsis->sinSustento())
+        ),
         'meta' => [
             ...$fuente,
             ...$this->indicadores->estadoEtl($fuente['ejecucion_etl_id']),

@@ -27,13 +27,14 @@ class IndicadoresService
      * @param  array  $ranking  Filas del ranking con costo_estimado y decision (RecomendacionService).
      * @param  array  $metaRecomendacion  meta devuelta por RecomendacionService::aplicar().
      * @param  array  $fuente  TopsisService::fuente().
+     * @param  int  $numSinSustento  Reportes excluidos del ranking por datos insuficientes.
      */
-    public function calcular(array $ranking, array $metaRecomendacion, array $fuente): array
+    public function calcular(array $ranking, array $metaRecomendacion, array $fuente, int $numSinSustento = 0): array
     {
         return [
             $this->antiguedadBacklog($ranking),
-            $this->coberturaPresupuestal($ranking, $metaRecomendacion),
-            $this->bachesCubiertos($ranking, $metaRecomendacion),
+            $this->coberturaPresupuestal($ranking, $metaRecomendacion, $numSinSustento),
+            $this->bachesCubiertos($ranking, $metaRecomendacion, $numSinSustento),
             $this->concentracionColonias($ranking),
             $this->tasaCalidad($fuente),
         ];
@@ -41,6 +42,12 @@ class IndicadoresService
 
     /**
      * Reportes activos creados o actualizados después de iniciar la ejecución ETL usada.
+     *
+     * Se usa updated_at (y no historial_estados) porque también detecta reportes nuevos y
+     * cambios de score/prioridad. Todas las escrituras a reportes pasan por Eloquent update(),
+     * que solo escribe si hay un cambio real. Se incluye además reporte_ai_analisis.updated_at:
+     * un re-análisis IA cambia severidad, confianza y área (usados por el ETL) aunque el score
+     * del reporte no cambie.
      *
      * @return array{etl_desactualizado: bool, reportes_nuevos_desde_etl: int}
      */
@@ -55,7 +62,9 @@ class IndicadoresService
         $desde = $ejecucion->iniciado_at;
 
         $nuevos = Reporte::whereIn('estado', EtlService::ESTADOS_ACTIVOS)
-            ->where(fn ($q) => $q->where('created_at', '>', $desde)->orWhere('updated_at', '>', $desde))
+            ->where(fn ($q) => $q->where('created_at', '>', $desde)
+                ->orWhere('updated_at', '>', $desde)
+                ->orWhereHas('aiAnalisis', fn ($ia) => $ia->where('updated_at', '>', $desde)))
             ->count();
 
         return ['etl_desactualizado' => $nuevos > 0, 'reportes_nuevos_desde_etl' => $nuevos];
@@ -84,20 +93,21 @@ class IndicadoresService
         );
     }
 
-    private function coberturaPresupuestal(array $ranking, array $meta): array
+    private function coberturaPresupuestal(array $ranking, array $meta, int $numSinSustento): array
     {
         $costoTotal = round(array_sum(array_column($ranking, 'costo_estimado')), 2);
         $costoRecomendados = (float) ($meta['costo_recomendados'] ?? 0);
         $hayPresupuesto = ($meta['presupuesto'] ?? null) !== null;
-        $valor = $hayPresupuesto ? $this->porcentaje($costoRecomendados, $costoTotal) : 0.0;
+        // Sin presupuesto no hay cobertura que medir: null (no 0) para no sugerir una cobertura nula.
+        $valor = $hayPresupuesto ? $this->porcentaje($costoRecomendados, $costoTotal) : null;
 
         $interpretacion = match (true) {
-            $costoTotal == 0 => 'No hay costo pendiente que cubrir en la selección.',
             ! $hayPresupuesto => 'Sin presupuesto definido: no se puede calcular la cobertura.',
+            $costoTotal == 0 => 'No hay costo pendiente que cubrir en la selección.',
             $valor >= 100 => 'El presupuesto cubre todo el costo pendiente ('.$this->dinero($costoTotal).').',
             default => "El presupuesto cubre el {$this->num($valor)} % del costo pendiente ("
                 .$this->dinero($costoRecomendados).' de '.$this->dinero($costoTotal).').',
-        };
+        }.$this->notaSinSustento($numSinSustento);
 
         return $this->indicador(
             'cobertura_presupuestal',
@@ -111,11 +121,12 @@ class IndicadoresService
         );
     }
 
-    private function bachesCubiertos(array $ranking, array $meta): array
+    private function bachesCubiertos(array $ranking, array $meta, int $numSinSustento): array
     {
         $total = count($ranking);
         $recomendados = (int) ($meta['num_recomendados'] ?? 0);
-        $valor = $this->porcentaje($recomendados, $total);
+        $hayPresupuesto = ($meta['presupuesto'] ?? null) !== null;
+        $valor = $hayPresupuesto ? $this->porcentaje($recomendados, $total) : null;
 
         return $this->indicador(
             'baches_cubiertos',
@@ -125,11 +136,11 @@ class IndicadoresService
             'baches recomendados / total de baches rankeados × 100',
             'Decisión por presupuesto (RecomendacionService) sobre el ranking TOPSIS',
             match (true) {
+                ! $hayPresupuesto => 'Sin presupuesto definido: no hay baches recomendados.',
                 $total === 0 => 'No hay baches pendientes en la selección.',
-                ($meta['presupuesto'] ?? null) === null => 'Sin presupuesto definido: no hay baches recomendados.',
                 default => "Con el presupuesto se pueden atender {$recomendados} de {$total} baches ({$this->num($valor)} %).",
-            },
-            ['recomendados' => $recomendados, 'total' => $total]
+            }.$this->notaSinSustento($numSinSustento),
+            ['recomendados' => $recomendados, 'total' => $total, 'sin_sustento' => $numSinSustento]
         );
     }
 
@@ -200,6 +211,15 @@ class IndicadoresService
     private function indicador(string $clave, string $nombre, ?float $valor, string $unidad, string $formula, string $fuente, string $interpretacion, array $detalle = []): array
     {
         return compact('clave', 'nombre', 'valor', 'unidad', 'formula', 'fuente', 'interpretacion', 'detalle');
+    }
+
+    private function notaSinSustento(int $n): string
+    {
+        return match (true) {
+            $n === 1 => ' No incluye 1 reporte excluido por falta de sustento (datos insuficientes).',
+            $n > 1 => " No incluye {$n} reportes excluidos por falta de sustento (datos insuficientes).",
+            default => '',
+        };
     }
 
     private function porcentaje(float $parte, float $total): float

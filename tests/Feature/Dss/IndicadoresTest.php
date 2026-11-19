@@ -84,7 +84,7 @@ class IndicadoresTest extends TestCase
         return $id;
     }
 
-    private function crearLimpio(string $colonia, int $dias, ?float $area): void
+    private function crearLimpio(string $colonia, int $dias, ?float $area, bool $suficiente = true): void
     {
         $coloniaId = $this->colonia($colonia);
         $id = $this->crearReporte(['colonia_id' => $coloniaId], $area);
@@ -94,7 +94,7 @@ class IndicadoresTest extends TestCase
             'severidad' => 0.6, 'tipo_via' => 0.5, 'dias_pendiente' => $dias,
             'densidad_zona' => 1, 'score_ia' => 50 + $this->consecutivo,
             'colonia_id' => $coloniaId, 'latitud' => 17.05, 'longitud' => -96.72,
-            'num_reportes_fusionados' => 1, 'datos_suficientes' => true,
+            'num_reportes_fusionados' => 1, 'datos_suficientes' => $suficiente,
             'created_at' => now(), 'updated_at' => now(),
         ]);
     }
@@ -124,7 +124,8 @@ class IndicadoresTest extends TestCase
         $servicio = app(IndicadoresService::class);
 
         return [
-            'indicadores' => collect($servicio->calcular($rec['ranking'], $rec['meta'], $fuente))->keyBy('clave')->all(),
+            'indicadores' => collect($servicio->calcular($rec['ranking'], $rec['meta'], $fuente, count($topsis->sinSustento())))
+                ->keyBy('clave')->all(),
             'meta' => $rec['meta'] + $servicio->estadoEtl($fuente['ejecucion_etl_id']),
         ];
     }
@@ -187,6 +188,34 @@ class IndicadoresTest extends TestCase
         $this->assertEqualsWithDelta(100.0, $ind['cobertura_presupuestal']['valor'], 0.001);
         $this->assertEqualsWithDelta(100.0, $ind['baches_cubiertos']['valor'], 0.001);
         $this->assertStringContainsString('cubre todo', $ind['cobertura_presupuestal']['interpretacion']);
+    }
+
+    public function test_sin_presupuesto_la_cobertura_es_null(): void
+    {
+        $this->crearDatosConocidos();
+
+        $ind = $this->calcular(null)['indicadores'];   // no hay presupuesto del mes en la BD de prueba
+
+        $this->assertNull($ind['cobertura_presupuestal']['valor']);
+        $this->assertNull($ind['baches_cubiertos']['valor']);
+        $this->assertStringStartsWith('Sin presupuesto definido', $ind['cobertura_presupuestal']['interpretacion']);
+        $this->assertStringStartsWith('Sin presupuesto definido', $ind['baches_cubiertos']['interpretacion']);
+    }
+
+    public function test_interpretacion_menciona_los_excluidos_sin_sustento(): void
+    {
+        $this->crearDatosConocidos();
+        $this->crearLimpio('Centro', 12, 0.5, false);
+        $this->crearLimpio('Reforma', 8, 0.5, false);
+
+        $ind = $this->calcular(3000)['indicadores'];
+
+        foreach (['cobertura_presupuestal', 'baches_cubiertos'] as $clave) {
+            $this->assertStringContainsString('No incluye 2 reportes excluidos por falta de sustento', $ind[$clave]['interpretacion'], $clave);
+        }
+        // Los excluidos no entran al denominador
+        $this->assertSame(7, $ind['baches_cubiertos']['detalle']['total']);
+        $this->assertEqualsWithDelta(10020, $ind['cobertura_presupuestal']['detalle']['costo_total_pendiente'], 0.01);
     }
 
     public function test_presupuesto_cero_da_cobertura_cero(): void
@@ -278,6 +307,21 @@ class IndicadoresTest extends TestCase
 
         $this->travel(1)->minutes();
         DB::table('reportes')->where('id', $id)->update(['estado' => 'validado', 'updated_at' => now()]);
+
+        $meta = $this->calcular(5000)['meta'];
+
+        $this->assertTrue($meta['etl_desactualizado']);
+        $this->assertSame(1, $meta['reportes_nuevos_desde_etl']);
+    }
+
+    public function test_aviso_cuenta_reanalisis_ia_aunque_el_reporte_no_cambie(): void
+    {
+        $id = $this->crearReporte();
+        app(EtlService::class)->ejecutar();
+
+        $this->travel(1)->minutes();
+        DB::table('reporte_ai_analisis')->where('reporte_id', $id)
+            ->update(['severidad_ia' => 'alta', 'updated_at' => now()]);
 
         $meta = $this->calcular(5000)['meta'];
 
