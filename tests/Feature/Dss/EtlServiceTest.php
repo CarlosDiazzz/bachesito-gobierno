@@ -8,6 +8,7 @@ use App\Models\DssReporteLimpio;
 use App\Models\User;
 use App\Services\Dss\EtlService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Tests\TestCase;
 
@@ -89,7 +90,7 @@ class EtlServiceTest extends TestCase
         return $ejecucion;
     }
 
-    private function anomaliasDe(int $reporteId): \Illuminate\Support\Collection
+    private function anomaliasDe(int $reporteId): Collection
     {
         return DssEtlAnomalia::where('reporte_id', $reporteId)->get();
     }
